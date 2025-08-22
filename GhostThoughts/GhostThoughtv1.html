@@ -120,12 +120,33 @@
       if (error) console.error('Clear error:', error);
     }
 
-    // --- UI Logic (shortened for clarity, reuse your existing functions) ---
+    // DOM elements
     const addThoughtBtn = document.getElementById('addThoughtBtn');
     const spawnThoughtBtn = document.getElementById('spawnThoughtBtn');
     const clearThoughtsBtn = document.getElementById('clearThoughtsBtn');
-    const submitBtn = document.getElementById('submitBtn');
+    const thoughtForm = document.getElementById('thoughtForm');
     const cancelBtn = document.getElementById('cancelBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    const moodSelect = document.getElementById('moodSelect');
+    const customMood = document.getElementById('customMood');
+    const customMoodName = document.getElementById('customMoodName');
+    const customMoodEmoji = document.getElementById('customMoodEmoji');
+    const htmlToggle = document.getElementById('htmlToggle');
+    const simpleText = document.getElementById('simpleText');
+    const htmlEditor = document.getElementById('htmlEditor');
+    const thoughtText = document.getElementById('thoughtText');
+    const htmlContent = document.getElementById('htmlContent');
+    const thoughtTitle = document.getElementById('thoughtTitle');
+    const blogOverlay = document.getElementById('blogOverlay');
+    const blogClose = document.getElementById('blogClose');
+    const blogGhost = document.getElementById('blogGhost');
+    const blogMood = document.getElementById('blogMood');
+    const blogDate = document.getElementById('blogDate');
+    const blogTitle = document.getElementById('blogTitle');
+    const blogText = document.getElementById('blogText');
+    const blogHtml = document.getElementById('blogHtml');
+    const message = document.getElementById('message');
+    
 
     addThoughtBtn.addEventListener('click', () => {
       document.getElementById('thoughtForm').classList.toggle('show');
@@ -167,7 +188,703 @@
       document.querySelectorAll('.ghost-container').forEach(el => el.remove());
     });
 
-    // --- include your existing createGhost(), showBlogView(), etc. here ---
+    // Store ghost positions
+const ghostPositions = new Map();
+let sampleThoughtsUsed = new Set();
+
+// Toggle HTML editor
+htmlToggle.addEventListener('change', () => {
+    if (htmlToggle.checked) {
+        simpleText.style.display = 'none';
+        htmlEditor.classList.add('show');
+    } else {
+        simpleText.style.display = 'block';
+        htmlEditor.classList.remove('show');
+    }
+});
+
+// Show/hide form
+addThoughtBtn.addEventListener('click', () => {
+    const thoughts = JSON.parse(localStorage.getItem('thoughts') || '[]');
+    if (thoughts.length >= maxGhosts) {
+        alert(`You've reached the maximum of ${maxGhosts} thoughts. Delete some before adding more.`);
+        return;
+    }
+    thoughtForm.classList.toggle('show');
+    message.classList.remove('show');
+});
+
+// Toggle custom mood fields
+moodSelect.addEventListener('change', () => {
+    if (moodSelect.value === 'other') {
+        customMood.classList.add('show');
+    } else {
+        customMood.classList.remove('show');
+    }
+});
+
+cancelBtn.addEventListener('click', closeForm);
+
+function closeForm() {
+    thoughtForm.classList.remove('show');
+    customMood.classList.remove('show');
+    moodSelect.value = 'joy';
+    customMoodName.value = '';
+    customMoodEmoji.value = '';
+    htmlToggle.checked = false;
+    simpleText.style.display = 'block';
+    htmlEditor.classList.remove('show');
+    thoughtText.value = '';
+    htmlContent.value = '';
+    thoughtTitle.value = '';
+}
+
+// Clear all ghosts
+clearThoughtsBtn.addEventListener('click', () => {
+    document.querySelectorAll('.ghost-container').forEach(el => el.remove());
+    ghostPositions.clear();
+    localStorage.removeItem('thoughts');
+    sampleThoughtsUsed.clear();
+    message.classList.remove('show');
+});
+
+// Spawn a random ghost
+spawnThoughtBtn.addEventListener('click', () => {
+    const saved = JSON.parse(localStorage.getItem('thoughts') || '[]');
+    
+    // If no thoughts in storage, use sample thoughts
+    if (saved.length === 0) {
+        const sampleThoughts = [
+            { title: "Happy Day", text: "I'm so happy I could float forever!", mood: "joy", date: new Date().toLocaleDateString() },
+            { title: "Feeling Blue", text: "Sometimes I feel blue for no reason", mood: "sadness", date: new Date().toLocaleDateString() },
+            { title: "Angry Moment", text: "That really makes me mad!", mood: "anger", date: new Date().toLocaleDateString() },
+            { title: "Scared Thoughts", text: "I'm scared of what might happen tomorrow", mood: "fear", date: new Date().toLocaleDateString() },
+            { title: "Disgusting!", text: "Eww, that's disgusting!", mood: "disgust", date: new Date().toLocaleDateString() },
+            { title: "In Love", text: "My heart beats for you, even though I don't have one!", mood: "inlove", date: new Date().toLocaleDateString() }
+        ];
+        
+        // Find a sample thought that hasn't been used yet
+        const availableThoughts = sampleThoughts.filter(thought => 
+            !sampleThoughtsUsed.has(thought.text)
+        );
+        
+        if (availableThoughts.length > 0) {
+            const randomThought = availableThoughts[Math.floor(Math.random() * availableThoughts.length)];
+            sampleThoughtsUsed.add(randomThought.text);
+            createGhost(randomThought);
+            
+            // Save to localStorage to maintain state
+            const thoughts = JSON.parse(localStorage.getItem('thoughts') || '[]');
+            thoughts.push(randomThought);
+            localStorage.setItem('thoughts', JSON.stringify(thoughts));
+            
+            // Show message if all sample thoughts have been used
+            if (sampleThoughtsUsed.size >= sampleThoughts.length) {
+                message.classList.add('show');
+            }
+        } else {
+            message.classList.add('show');
+        }
+    } else if (saved.length > 0) {
+        const randomThought = saved[Math.floor(Math.random() * saved.length)];
+        createGhost(randomThought);
+    } else {
+        alert('No thoughts available! Add some thoughts first.');
+    }
+});
+
+// Create a ghost with the given thought
+function createGhost(thought, x = null, y = null) {
+    const ghostContainer = document.createElement('div');
+    ghostContainer.className = 'ghost-container';
+    
+    const ghost = document.createElement('div');
+    ghost.className = `ghost ${thought.mood}`;
+    
+    // Create ghost elements
+    const ghostBody = document.createElement('div');
+    ghostBody.className = 'ghost-body';
+    
+    const ghostEyes = document.createElement('div');
+    ghostEyes.className = 'ghost-eyes';
+    
+    const leftEye = document.createElement('div');
+    leftEye.className = 'ghost-eye';
+    
+    const rightEye = document.createElement('div');
+    rightEye.className = 'ghost-eye';
+    
+    const mouth = document.createElement('div');
+    mouth.className = 'ghost-mouth';
+    
+    const skirt = document.createElement('div');
+    skirt.className = 'ghost-skirt';
+    
+    // Create heart for inlove ghost
+    const heart = document.createElement('div');
+    heart.className = 'heart';
+    
+    // Create 3 folds for the skirt
+    for (let i = 0; i < 3; i++) {
+        const fold = document.createElement('div');
+        fold.className = 'ghost-fold';
+        skirt.appendChild(fold);
+    }
+    
+    // Assemble the ghost
+    ghostEyes.appendChild(leftEye);
+    ghostEyes.appendChild(rightEye);
+    ghost.appendChild(ghostBody);
+    ghost.appendChild(ghostEyes);
+    ghost.appendChild(mouth);
+    ghost.appendChild(skirt);
+    ghost.appendChild(heart);
+    
+    // Create speech balloon
+    const balloon = document.createElement('div');
+    balloon.className = 'balloon';
+    
+    // Display custom mood name if it's an "other" mood
+    let moodDisplay = thought.mood;
+    if (thought.mood === 'other') {
+        if (thought.customMood && thought.customMood.name) {
+            moodDisplay = thought.customMood.name;
+        } else {
+            moodDisplay = "Mystery Mood";
+        }
+    }
+    
+    // Add emoji if available
+    let emojiDisplay = "";
+    if (thought.mood === 'other' && thought.customMood && thought.customMood.emoji) {
+        emojiDisplay = " " + thought.customMood.emoji;
+    }
+    
+    // Show title or preview text in balloon
+    let previewText = thought.title || "";
+    
+    if (!previewText && thought.htmlContent) {
+        previewText = "Click to view full post...";
+    } else if (!previewText) {
+        // Show first line of text if no title
+        const firstLineEnd = thought.text.indexOf('\n');
+        if (firstLineEnd !== -1) {
+            previewText = thought.text.substring(0, firstLineEnd);
+            if (previewText.length > 80) {
+                previewText = previewText.substring(0, 80) + "...";
+            }
+        } else if (thought.text.length > 80) {
+            previewText = thought.text.substring(0, 80) + "...";
+        } else {
+            previewText = thought.text;
+        }
+    }
+    
+    balloon.innerHTML = `<strong>${moodDisplay.toUpperCase()}${emojiDisplay}</strong><br>${previewText}<br><small>${thought.date}</small>`;
+    ghostContainer.appendChild(balloon);
+    ghostContainer.appendChild(ghost);
+    
+    // Add class for long content
+    if ((thought.text && thought.text.length > 80) || thought.htmlContent || thought.title) {
+        balloon.classList.add('long');
+    }
+    
+    // Position the ghost
+    if (x !== null && y !== null) {
+        ghostContainer.style.left = x + 'px';
+        ghostContainer.style.top = y + 'px';
+    } else {
+        positionGhost(ghostContainer);
+    }
+    
+    document.body.appendChild(ghostContainer);
+    
+    // Store the position for this ghost
+    const ghostId = Date.now() + Math.random().toString(36).substr(2, 9);
+    ghostContainer.dataset.ghostId = ghostId;
+    ghostContainer.dataset.thought = JSON.stringify(thought);
+    ghostPositions.set(ghostId, {
+        x: parseFloat(ghostContainer.style.left),
+        y: parseFloat(ghostContainer.style.top)
+    });
+    
+    // Set mood-specific properties
+    setMoodProperties(ghost, thought.mood);
+    
+    // Hover to show balloon
+    ghostContainer.addEventListener('mouseenter', () => {
+        document.querySelectorAll('.balloon').forEach(b => b.classList.remove('show'));
+        balloon.classList.add('show');
+    });
+    
+    ghostContainer.addEventListener('mouseleave', () => {
+        balloon.classList.remove('show');
+    });
+    
+    // Click to show full blog view
+    ghostContainer.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const thoughtData = JSON.parse(ghostContainer.dataset.thought);
+        showBlogView(thoughtData);
+    });
+    
+    // Mouse movement with mood-specific behavior
+    document.addEventListener('mousemove', (e) => {
+        const ghostRect = ghostContainer.getBoundingClientRect();
+        const ghostCenterX = ghostRect.left + ghostRect.width / 2;
+        const ghostCenterY = ghostRect.top + ghostRect.height / 2;
+        
+        const distance = Math.sqrt(
+            Math.pow(e.clientX - ghostCenterX, 2) + 
+            Math.pow(e.clientY - ghostCenterY, 2)
+        );
+        
+        if (distance < evasionRadius) {
+            // Calculate direction based on mood
+            let dx = (ghostCenterX - e.clientX);
+            let dy = (ghostCenterY - e.clientY);
+            
+            // Normalize and apply mood-specific multipliers
+            const norm = Math.sqrt(dx * dx + dy * dy);
+            dx /= norm;
+            dy /= norm;
+            
+            // Apply mood-specific behavior
+            applyMoodBehavior(ghostContainer, dx, dy, thought.mood, e);
+        }
+    });
+    
+    // Start floating animation
+    moveGhost(ghostContainer, thought.mood);
+}
+
+// Show full blog view
+function showBlogView(thought) {
+    // Set blog content
+    blogGhost.className = `blog-ghost ${thought.mood}`;
+    
+    // Set mood-specific properties for blog ghost
+    setMoodProperties(blogGhost, thought.mood);
+    
+    // Display custom mood name if it's an "other" mood
+    let moodDisplay = thought.mood;
+    if (thought.mood === 'other') {
+        if (thought.customMood && thought.customMood.name) {
+            moodDisplay = thought.customMood.name;
+        } else {
+            moodDisplay = "Mystery Mood";
+        }
+    }
+    
+    // Add emoji if available
+    let emojiDisplay = "";
+    if (thought.mood === 'other' && thought.customMood && thought.customMood.emoji) {
+        emojiDisplay = " " + thought.customMood.emoji;
+    }
+    
+    blogMood.textContent = `${moodDisplay.toUpperCase()}${emojiDisplay}`;
+    blogDate.textContent = thought.date;
+    blogTitle.textContent = thought.title || "Untitled Thought";
+    blogText.textContent = thought.text;
+    
+    // Display HTML content if available
+    if (thought.htmlContent) {
+        blogHtml.innerHTML = thought.htmlContent;
+        blogHtml.style.display = 'block';
+    } else {
+        blogHtml.style.display = 'none';
+    }
+    
+    // Show the overlay
+    blogOverlay.classList.add('active');
+}
+
+// Close blog view
+blogClose.addEventListener('click', () => {
+    blogOverlay.classList.remove('active');
+});
+
+// Close blog view when clicking outside content
+blogOverlay.addEventListener('click', (e) => {
+    if (e.target === blogOverlay) {
+        blogOverlay.classList.remove('active');
+    }
+});
+
+// Position ghost in an available space
+function positionGhost(ghostContainer) {
+    const ghostWidth = 60;
+    const ghostHeight = 80;
+    const padding = 20;
+    
+    // Try to find a position that doesn't overlap with existing ghosts
+    let attempts = 0;
+    let placed = false;
+    
+    while (!placed && attempts < 50) {
+        const x = padding + Math.random() * (window.innerWidth - ghostWidth - padding * 2);
+        const y = padding + Math.random() * (window.innerHeight - ghostHeight - padding * 2 - 100);
+        
+        // Check if this position overlaps with existing ghosts
+        const overlapping = Array.from(document.querySelectorAll('.ghost-container')).some(existingGhost => {
+            const rect = existingGhost.getBoundingClientRect();
+            return !(x > rect.right + padding || x + ghostWidth < rect.left - padding ||
+                    y > rect.bottom + padding || y + ghostHeight < rect.top - padding);
+        });
+        
+        if (!overlapping) {
+            ghostContainer.style.left = x + 'px';
+            ghostContainer.style.top = y + 'px';
+            placed = true;
+        }
+        
+        attempts++;
+    }
+    
+    // If we couldn't find a non-overlapping position, place it randomly
+    if (!placed) {
+        ghostContainer.style.left = Math.random() * (window.innerWidth - 100) + 'px';
+        ghostContainer.style.top = (50 + Math.random() * (window.innerHeight - 200)) + 'px';
+    }
+}
+
+// Set visual properties based on mood
+function setMoodProperties(ghost, mood) {
+    // For "other" moods, randomly assign properties from existing moods
+    const actualMood = mood === 'other' ? getRandomMood() : mood;
+    
+    switch(actualMood) {
+        case 'joy':
+            ghost.style.transform = 'scale(1.1)';
+            ghost.style.filter = 'brightness(1.2)';
+            break;
+        case 'sadness':
+            ghost.style.opacity = '0.8';
+            break;
+        case 'anger':
+            ghost.querySelector('.ghost-mouth').style.backgroundColor = 'red';
+            break;
+        case 'fear':
+            ghost.style.transition = 'all 0.3s';
+            setInterval(() => {
+                ghost.style.transform = `translateX(${Math.random() > 0.5 ? 1 : -1}px)`;
+            }, 300);
+            break;
+        case 'disgust':
+            ghost.style.opacity = '0.9';
+            break;
+        case 'inlove':
+            const eyes = ghost.querySelectorAll('.ghost-eye');
+            eyes.forEach(eye => {
+                eye.style.borderRadius = '0';
+                eye.style.transform = 'rotate(45deg)';
+                eye.style.width = '6px';
+                eye.style.height = '6px';
+            });
+            break;
+    }
+}
+
+// Get a random mood for "other" mood types
+function getRandomMood() {
+    const moods = ['joy', 'sadness', 'anger', 'fear', 'disgust', 'inlove'];
+    return moods[Math.floor(Math.random() * moods.length)];
+}
+
+// Apply mood-specific behavior
+function applyMoodBehavior(ghostContainer, dx, dy, mood, mouseEvent) {
+    // For "other" moods, randomly assign behavior from existing moods
+    const actualMood = mood === 'other' ? getRandomMood() : mood;
+    
+    const behaviorStrength = 0.8;
+    
+    // Mood-specific behavior multipliers
+    let speedMultiplier = 1;
+    let jitterX = 0;
+    let jitterY = 0;
+    
+    switch(actualMood) {
+        case 'joy':
+            speedMultiplier = 0.8;
+            jitterX = (Math.random() - 0.5) * 0.3;
+            jitterY = (Math.random() - 0.5) * 0.3;
+            break;
+        case 'sadness':
+            speedMultiplier = 0.5;
+            break;
+        case 'anger':
+            speedMultiplier = 1.0;
+            jitterX = (Math.random() - 0.5) * 1;
+            jitterY = (Math.random() - 0.5) * 1;
+            break;
+        case 'fear':
+            speedMultiplier = 1.2;
+            jitterX = (Math.random() - 0.5) * 1.5;
+            jitterY = (Math.random() - 0.5) * 1.5;
+            break;
+        case 'disgust':
+            speedMultiplier = 0.4;
+            break;
+        case 'inlove':
+            speedMultiplier = -1.2;
+            jitterX = (Math.random() - 0.5) * 0.5;
+            jitterY = (Math.random() - 0.5) * 0.5;
+            
+            const ghostRect = ghostContainer.getBoundingClientRect();
+            const ghostCenterX = ghostRect.left + ghostRect.width / 2;
+            const ghostCenterY = ghostRect.top + ghostRect.height / 2;
+            
+            const towardX = (mouseEvent.clientX - ghostCenterX) * 0.02;
+            const towardY = (mouseEvent.clientY - ghostCenterY) * 0.02;
+            
+            jitterX += towardX;
+            jitterY += towardY;
+            break;
+    }
+    
+    // Calculate new position with mood-specific behavior
+    const currentX = parseFloat(ghostContainer.style.left || 0);
+    const currentY = parseFloat(ghostContainer.style.top || 0);
+    
+    const newX = currentX + (dx * behaviorStrength * speedMultiplier) + jitterX;
+    const newY = currentY + (dy * behaviorStrength * speedMultiplier) + jitterY;
+    
+    // Keep within bounds
+    const boundedX = Math.max(0, Math.min(window.innerWidth - 100, newX));
+    const boundedY = Math.max(0, Math.min(window.innerHeight - 150, newY));
+    
+    ghostContainer.style.left = boundedX + 'px';
+    ghostContainer.style.top = boundedY + 'px';
+    
+    // Update stored position
+    const ghostId = ghostContainer.dataset.ghostId;
+    if (ghostId && ghostPositions.has(ghostId)) {
+        ghostPositions.set(ghostId, { x: boundedX, y: boundedY });
+    }
+}
+
+// Make the ghost float with mood-specific movement
+function moveGhost(ghostContainer, mood) {
+    // For "other" moods, randomly assign movement from existing moods
+    const actualMood = mood === 'other' ? getRandomMood() : mood;
+    
+    // Mood-specific floating parameters
+    let floatRangeX, floatRangeY, floatSpeed;
+    
+    switch(actualMood) {
+        case 'joy':
+            floatRangeX = 1 + Math.random() * 0.5;
+            floatRangeY = 1 + Math.random() * 0.5;
+            floatSpeed = 0.01 + Math.random() * 0.005;
+            break;
+        case 'sadness':
+            floatRangeX = 0.5 + Math.random() * 0.3;
+            floatRangeY = 0.8 + Math.random() * 0.4;
+            floatSpeed = 0.008 + Math.random() * 0.004;
+            break;
+        case 'anger':
+            floatRangeX = 1.5 + Math.random() * 0.8;
+            floatRangeY = 1 + Math.random() * 0.5;
+            floatSpeed = 0.015 + Math.random() * 0.008;
+            break;
+        case 'fear':
+            floatRangeX = 2 + Math.random() * 1;
+            floatRangeY = 1.5 + Math.random() * 0.8;
+            floatSpeed = 0.02 + Math.random() * 0.01;
+            break;
+        case 'disgust':
+            floatRangeX = 0.5 + Math.random() * 0.3;
+            floatRangeY = 0.5 + Math.random() * 0.3;
+            floatSpeed = 0.01 + Math.random() * 0.005;
+            break;
+        case 'inlove':
+            floatRangeX = 0.8 + Math.random() * 0.4;
+            floatRangeY = 1.2 + Math.random() * 0.6;
+            floatSpeed = 0.015 + Math.random() * 0.007;
+            break;
+        default:
+            floatRangeX = 1 + Math.random() * 0.5;
+            floatRangeY = 1 + Math.random() * 0.5;
+            floatSpeed = 0.01 + Math.random() * 0.005;
+    }
+    
+    let angle = Math.random() * Math.PI * 2;
+    let xDirection = Math.random() > 0.5 ? 1 : -1;
+    let yDirection = Math.random() > 0.5 ? 1 : -1;
+    
+    // Add more random directional changes
+    let directionChangeCounter = 0;
+    const directionChangeFrequency = 50 + Math.floor(Math.random() * 100);
+    
+    function animate() {
+        if (!document.body.contains(ghostContainer)) return;
+        
+        // Occasionally change direction randomly
+        directionChangeCounter++;
+        if (directionChangeCounter > directionChangeFrequency) {
+            if (Math.random() > 0.7) xDirection *= -1;
+            if (Math.random() > 0.7) yDirection *= -1;
+            directionChangeCounter = 0;
+        }
+        
+        // Calculate floating movement
+        const floatX = Math.sin(angle) * floatRangeX * xDirection;
+        const floatY = Math.cos(angle * 0.7) * floatRangeY * yDirection;
+        
+        // Apply floating to position
+        const currentX = parseFloat(ghostContainer.style.left || 0);
+        const currentY = parseFloat(ghostContainer.style.top || 0);
+        
+        const newX = currentX + floatX;
+        const newY = currentY + floatY;
+        
+        // Keep within bounds with gentle bouncing and change direction when hitting edges
+        let boundedX = newX;
+        let boundedY = newY;
+        
+        if (newX > window.innerWidth - 100) {
+            boundedX = window.innerWidth - 100;
+            xDirection = -1;
+        }
+        if (newX < 0) {
+            boundedX = 0;
+            xDirection = 1;
+        }
+        if (newY > window.innerHeight - 150) {
+            boundedY = window.innerHeight - 150;
+            yDirection = -1;
+        }
+        if (newY < 0) {
+            boundedY = 0;
+            yDirection = 1;
+        }
+        
+        ghostContainer.style.left = boundedX + 'px';
+        ghostContainer.style.top = boundedY + 'px';
+        
+        // Update stored position
+        const ghostId = ghostContainer.dataset.ghostId;
+        if (ghostId && ghostPositions.has(ghostId)) {
+            ghostPositions.set(ghostId, { x: boundedX, y: boundedY });
+        }
+        
+        angle += floatSpeed;
+        requestAnimationFrame(animate);
+    }
+    
+    animate();
+}
+
+// Check if thought already exists
+function thoughtExists(newThought, thoughts) {
+    return thoughts.some(thought => {
+        // Check if text content is the same
+        if (thought.text === newThought.text) return true;
+        
+        // Check if HTML content is the same (if both have HTML content)
+        if (thought.htmlContent && newThought.htmlContent && 
+            thought.htmlContent === newThought.htmlContent) return true;
+            
+        return false;
+    });
+}
+
+// Load ghosts from localStorage
+function loadGhosts() {
+    document.querySelectorAll('.ghost-container').forEach(el => el.remove());
+    ghostPositions.clear();
+    
+    const saved = JSON.parse(localStorage.getItem('thoughts') || '[]');
+    
+    // Limit to maxGhosts and select the most recent ones
+    const recentThoughts = saved.slice(0, maxGhosts);
+    
+    recentThoughts.forEach(thought => createGhost(thought));
+}
+
+// Save a new thought
+submitBtn.onclick = () => {
+    const text = thoughtText.value.trim();
+    const html = htmlContent.value.trim();
+    const title = thoughtTitle.value.trim();
+    let mood = moodSelect.value;
+    let customMoodData = null;
+    
+    if (!text && !html) return;
+    
+    // Handle custom mood
+    if (mood === 'other') {
+        const customName = customMoodName.value.trim();
+        const customEmoji = customMoodEmoji.value.trim();
+        
+        if (customName || customEmoji) {
+            customMoodData = {
+                name: customName || "Mystery Mood",
+                emoji: customEmoji || "🤔"
+            };
+        }
+    }
+    
+    const date = new Date().toLocaleDateString();
+
+    let thoughts = JSON.parse(localStorage.getItem('thoughts') || '[]');
+    
+    // Check if we've reached the maximum number of thoughts
+    if (thoughts.length >= maxGhosts) {
+        alert(`You've reached the maximum of ${maxGhosts} thoughts. Delete some before adding more.`);
+        closeForm();
+        return;
+    }
+    
+    const newThought = { 
+        title: title || null,
+        text: text || "HTML Content", 
+        mood, 
+        date,
+        customMood: customMoodData,
+        htmlContent: htmlToggle.checked ? html : null
+    };
+    
+    // Check if this thought already exists
+    if (thoughtExists(newThought, thoughts)) {
+        alert("This thought already exists!");
+        return;
+    }
+    
+    // Add new thought to the beginning and limit to maxGhosts
+    thoughts.unshift(newThought);
+    
+    if (thoughts.length > maxGhosts) {
+        thoughts = thoughts.slice(0, maxGhosts);
+    }
+    
+    localStorage.setItem('thoughts', JSON.stringify(thoughts));
+
+    thoughtText.value = '';
+    htmlContent.value = '';
+    thoughtTitle.value = '';
+    closeForm();
+    
+    // Instead of reloading all ghosts, just create the new one
+    createGhost(newThought);
+};
+
+// Initialize on load
+window.onload = loadGhosts;
+
+// Add some sample thoughts if none exist
+if (!localStorage.getItem('thoughts') || JSON.parse(localStorage.getItem('thoughts')).length === 0) {
+    const sampleThoughts = [
+        { title: "Happy Day", text: "I'm so happy I could float forever!", mood: "joy", date: new Date().toLocaleDateString() },
+        { title: "Feeling Blue", text: "Sometimes I feel blue for no reason", mood: "sadness", date: new Date().toLocaleDateString() },
+        { title: "Angry Moment", text: "That really makes me mad!", mood: "anger", date: new Date().toLocaleDateString() },
+        { title: "Scared Thoughts", text: "I'm scared of what might happen tomorrow", mood: "fear", date: new Date().toLocaleDateString() },
+        { title: "Disgusting!", text: "Eww, that's disgusting!", mood: "disgust", date: new Date().toLocaleDateString() },
+        { title: "In Love", text: "My heart beats for you, even though I don't have one!", mood: "inlove", date: new Date().toLocaleDateString() }
+    ];
+    localStorage.setItem('thoughts', JSON.stringify(sampleThoughts));
+    loadGhosts();
+}
   </script>
 </body>
 </html>
