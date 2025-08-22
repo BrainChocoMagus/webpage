@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ghost Thoughts</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a237e, #311b92, #4a148c);
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.4);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.7);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.8;
+            margin-bottom: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: calc(100vh - 200px);
+        }
+        
+        .instructions {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            line-height: 1.6;
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .addBtn, .spawnBtn, .clearBtn {
+            background: #1da1f2;
+            color: white;
+            border: none;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            font-size: 2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s;
+        }
+        
+        .addBtn:hover, .spawnBtn:hover, .clearBtn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+        }
+        
+        .ghost-container {
+            position: absolute;
+            transition: transform 0.5s;
+            z-index: 10;
+        }
+        
+        .ghost {
+            width: 40px;
+            height: 60px;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .ghost-body {
+            position: absolute;
+            width: 100%;
+            height: 45px;
+            background: white;
+            border-radius: 50% 50% 0 0;
+            bottom: 0;
+        }
+        
+        .ghost-eyes {
+            position: absolute;
+            top: 15px;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+        }
+        
+        .ghost-eye {
+            width: 8px;
+            height: 8px;
+            background: black;
+            border-radius: 50%;
+        }
+        
+        .ghost-mouth {
+            position: absolute;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 16px;
+            height: 8px;
+            background: black;
+            border-radius: 0 0 8px 8px;
+        }
+        
+        .ghost-skirt {
+            position: absolute;
+            bottom: -5px;
+            width: 100%;
+            height: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .ghost-fold {
+            width: 10px;
+            height: 10px;
+            background: white;
+            border-radius: 0 0 5px 5px;
+        }
+        
+        .heart {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 15px;
+            height: 15px;
+            background: #ff4081;
+            transform: rotate(45deg);
+            display: none;
+            animation: pulse 1.5s infinite;
+        }
+        
+        .heart:before, .heart:after {
+            content: '';
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background: #ff4081;
+            border-radius: 50%;
+        }
+        
+        .heart:before {
+            top: -8px;
+            left: 0;
+        }
+        
+        .heart:after {
+            top: 0;
+            left: -8px;
+        }
+        
+        @keyframes pulse {
+            0% { transform: rotate(45deg) scale(1); }
+            50% { transform: rotate(45deg) scale(1.2); }
+            100% { transform: rotate(45deg) scale(1); }
+        }
+        
+        .balloon {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            padding: 12px 15px;
+            border-radius: 20px;
+            width: 200px;
+            max-width: 80vw;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 100;
+            font-size: 14px;
+            line-height: 1.4;
+            bottom: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: left;
+            white-space: normal;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+            hyphens: auto;
+            overflow: hidden;
+            box-sizing: border-box;
+            scrollbar
+        }
+
+        .balloon.long {
+            max-height: 120px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .balloon.show {
+            opacity: 1;
+        }
+
+        .balloon:after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 10px 10px 0;
+            border-style: solid;
+            border-color: rgba(255, 255, 255, 0.95) transparent;
+        }
+        
+        /* Full-screen blog view */
+        .blog-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            overflow-y: auto;
+        }
+        
+        .blog-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+        
+        .blog-content {
+            background: white;
+            color: #333;
+            margin: 40px auto;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 800px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .blog-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #f44336;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .blog-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .blog-ghost {
+            width: 40px;
+            height: 60px;
+            margin-right: 15px;
+            position: relative;
+        }
+        
+        .blog-mood {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 0;
+        }
+        
+        .blog-date {
+            color: #777;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        
+        .blog-title {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: #1a237e;
+        }
+        
+        .blog-text {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            white-space: pre-wrap;
+        }
+        
+        .blog-html-content {
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+            margin-top: 20px;
+        }
+        
+        .blog-html-content * {
+            color: #333 !important;
+            background: transparent !important;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+        }
+        
+        .blog-html-content h1, 
+        .blog-html-content h2, 
+        .blog-html-content h3, 
+        .blog-html-content h4, 
+        .blog-html-content h5, 
+        .blog-html-content h6 {
+            margin: 1rem 0;
+            color: #1a237e !important;
+        }
+        
+        .blog-html-content p {
+            margin-bottom: 1rem;
+        }
+        
+        .blog-html-content a {
+            color: #1a237e !important;
+            text-decoration: underline;
+        }
+        
+        .blog-html-content ul, 
+        .blog-html-content ol {
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .thought-form {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            backdrop-filter: blur(10px);
+            display: none;
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        .thought-form.show {
+            display: block;
+        }
+        
+        textarea, select, input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            font-size: 1rem;
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .form-controls {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .form-controls button {
+            width: auto;
+            height: auto;
+            padding: 10px 20px;
+            font-size: 1rem;
+            border-radius: 30px;
+            background: #5e35b1;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .form-controls button:hover {
+            background: #7e57c2;
+        }
+        
+        .mood-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .custom-mood {
+            display: none;
+            margin-top: 10px;
+        }
+        
+        .custom-mood.show {
+            display: block;
+        }
+        
+        .html-toggle {
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .html-toggle input {
+            width: auto;
+            margin-right: 10px;
+        }
+        
+        .html-editor {
+            display: none;
+            margin-top: 10px;
+        }
+        
+        .html-editor.show {
+            display: block;
+        }
+        
+        .optional {
+            font-style: italic;
+            opacity: 0.7;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            position: relative;
+            margin-top: auto;
+        }
+        
+        /* Ghost colors based on mood - Inside Out inspired */
+        .ghost.joy .ghost-body { background: #ffeb3b; } /* Yellow */
+        .ghost.sadness .ghost-body { background: #2196f3; } /* Blue */
+        .ghost.anger .ghost-body { background: #f44336; } /* Red */
+        .ghost.fear .ghost-body { background: #9c27b0; } /* Purple */
+        .ghost.disgust .ghost-body { background: #4caf50; } /* Green */
+        .ghost.inlove .ghost-body { background: #ff4081; } /* Pink */
+        .ghost.other .ghost-body { background: #ff9800; } /* Orange for other moods */
+        
+        .blog-ghost.joy .ghost-body { background: #ffeb3b; }
+        .blog-ghost.sadness .ghost-body { background: #2196f3; }
+        .blog-ghost.anger .ghost-body { background: #f44336; }
+        .blog-ghost.fear .ghost-body { background: #9c27b0; }
+        .blog-ghost.disgust .ghost-body { background: #4caf50; }
+        .blog-ghost.inlove .ghost-body { background: #ff4081; }
+        .blog-ghost.other .ghost-body { background: #ff9800; }
+        
+        .inlove .heart {
+            display: block;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .subtitle {
+                font-size: 1rem;
+            }
+            
+            .button-group {
+                gap: 15px;
+            }
+            
+            .addBtn, .spawnBtn, .clearBtn {
+                width: 50px;
+                height: 50px;
+                font-size: 1.5rem;
+            }
+            
+            .container {
+                padding: 15px;
+            }
+            
+            .instructions {
+                padding: 12px;
+                font-size: 0.9rem;
+            }
+            
+            .thought-form {
+                padding: 15px;
+            }
+            
+            .balloon {
+                width: 180px;
+                font-size: 13px;
+            }
+            
+            .blog-content {
+                margin: 20px;
+                padding: 20px;
+            }
+            
+            .blog-title {
+                font-size: 1.5rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .button-group {
+                gap: 10px;
+            }
+            
+            .addBtn, .spawnBtn, .clearBtn {
+                width: 45px;
+                height: 45px;
+                font-size: 1.3rem;
+            }
+            
+            .form-controls {
+                flex-direction: column;
+            }
+            
+            .form-controls button {
+                width: 100%;
+            }
+            
+            .balloon {
+                width: 160px;
+                padding: 10px 12px;
+            }
+            
+            .blog-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .blog-ghost {
+                margin-bottom: 10px;
+            }
+        }
+        
+        .message {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+            display: none;
+            max-width: 500px;
+            width: 100%;
+        }
+        
+        .message.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Ghost Thoughts</h1>
+        <p class="subtitle">Your thoughts float around like ghosts with different moods</p>
+    </div>
+    
+    <div class="container">
+        <div class="instructions">
+            <p>These ghosts represent your saved thoughts, each with a different mood. Hover over a ghost to see the thought, 
+            and click to keep it visible. The ghosts will slowly evade your mouse cursor with different behaviors based on their mood!</p>
+        </div>
+        
+        <div class="button-group">
+            <button class="addBtn" id="addThoughtBtn">+</button>
+            <button class="spawnBtn" id="spawnThoughtBtn">👻</button>
+            <button class="clearBtn" id="clearThoughtsBtn">🗑️</button>
+        </div>
+        
+        <div id="thoughtForm" class="thought-form">
+            <h3>Add a Thought</h3>
+
+            <input type="text" id="thoughtTitle" placeholder="Title (optional)">
+            
+            <div class="html-toggle">
+                <input type="checkbox" id="htmlToggle">
+                <label for="htmlToggle">Create extended post with HTML</label>
+            </div>
+            
+            <div id="simpleText">
+                <textarea id="thoughtText" placeholder="What's on your mind?"></textarea>
+            </div>
+            
+            <div id="htmlEditor" class="html-editor">
+                <textarea id="htmlContent" placeholder="Write your HTML content here..."></textarea>
+                <p class="optional">You can use HTML tags to format your content</p>
+            </div>
+            
+            <label class="mood-label">Select Mood:</label>
+            <select id="moodSelect">
+                <option value="joy">Joy 😊</option>
+                <option value="sadness">Sadness 😢</option>
+                <option value="anger">Anger 😠</option>
+                <option value="fear">Fear 😨</option>
+                <option value="disgust">Disgust 😒</option>
+                <option value="inlove">In Love 😍</option>
+                <option value="other">Other Mood</option>
+            </select>
+            
+            <div id="customMood" class="custom-mood">
+                <input type="text" id="customMoodName" placeholder="Mood name (optional)">
+                <input type="text" id="customMoodEmoji" placeholder="Emoji (optional, e.g., 😎)">
+                <p class="optional">You can leave these blank for a random mood</p>
+            </div>
+            
+            <div class="form-controls">
+                <button id="cancelBtn">Cancel</button>
+                <button id="submitBtn">Save Thought</button>
+            </div>
+        </div>
+        
+        <div id="message" class="message">
+            <p>You've viewed all sample thoughts! Add your own thoughts using the + button.</p>
+        </div>
+    </div>
+    
+    <!-- Full-screen blog overlay -->
+    <div id="blogOverlay" class="blog-overlay">
+        <div class="blog-content">
+            <div class="blog-close" id="blogClose">X</div>
+            <div class="blog-header">
+                <div id="blogGhost" class="blog-ghost">
+                    <div class="ghost-body"></div>
+                    <div class="ghost-eyes">
+                        <div class="ghost-eye"></div>
+                        <div class="ghost-eye"></div>
+                    </div>
+                    <div class="ghost-mouth"></div>
+                    <div class="ghost-skirt">
+                        <div class="ghost-fold"></div>
+                        <div class="ghost-fold"></div>
+                        <div class="ghost-fold"></div>
+                    </div>
+                    <div class="heart"></div>
+                </div>
+                <div>
+                    <h2 id="blogMood" class="blog-mood"></h2>
+                    <div id="blogDate" class="blog-date"></div>
+                </div>
+            </div>
+            <h2 id="blogTitle" class="blog-title"></h2>
+            <div id="blogText" class="blog-text"></div>
+            <div id="blogHtml" class="blog-html-content"></div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>Hover over ghosts to see thoughts. Click to view full post.</p>
+    </footer>
+
+<script>
+// Configuration
+const maxGhosts = 20;
+const evasionRadius = 150;
+
+// DOM elements
+const addThoughtBtn = document.getElementById('addThoughtBtn');
+const spawnThoughtBtn = document.getElementById('spawnThoughtBtn');
+const clearThoughtsBtn = document.getElementById('clearThoughtsBtn');
+const thoughtForm = document.getElementById('thoughtForm');
+const cancelBtn = document.getElementById('cancelBtn');
+const submitBtn = document.getElementById('submitBtn');
+const moodSelect = document.getElementById('moodSelect');
+const customMood = document.getElementById('customMood');
+const customMoodName = document.getElementById('customMoodName');
+const customMoodEmoji = document.getElementById('customMoodEmoji');
+const htmlToggle = document.getElementById('htmlToggle');
+const simpleText = document.getElementById('simpleText');
+const htmlEditor = document.getElementById('htmlEditor');
+const thoughtText = document.getElementById('thoughtText');
+const htmlContent = document.getElementById('htmlContent');
+const thoughtTitle = document.getElementById('thoughtTitle');
+const blogOverlay = document.getElementById('blogOverlay');
+const blogClose = document.getElementById('blogClose');
+const blogGhost = document.getElementById('blogGhost');
+const blogMood = document.getElementById('blogMood');
+const blogDate = document.getElementById('blogDate');
+const blogTitle = document.getElementById('blogTitle');
+const blogText = document.getElementById('blogText');
+const blogHtml = document.getElementById('blogHtml');
+const message = document.getElementById('message');
+
+// Store ghost positions
+const ghostPositions = new Map();
+let sampleThoughtsUsed = new Set();
+
+// Toggle HTML editor
+htmlToggle.addEventListener('change', () => {
+    if (htmlToggle.checked) {
+        simpleText.style.display = 'none';
+        htmlEditor.classList.add('show');
+    } else {
+        simpleText.style.display = 'block';
+        htmlEditor.classList.remove('show');
+    }
+});
+
+// Show/hide form
+addThoughtBtn.addEventListener('click', () => {
+    const thoughts = JSON.parse(localStorage.getItem('thoughts') || '[]');
+    if (thoughts.length >= maxGhosts) {
+        alert(`You've reached the maximum of ${maxGhosts} thoughts. Delete some before adding more.`);
+        return;
+    }
+    thoughtForm.classList.toggle('show');
+    message.classList.remove('show');
+});
+
+// Toggle custom mood fields
+moodSelect.addEventListener('change', () => {
+    if (moodSelect.value === 'other') {
+        customMood.classList.add('show');
+    } else {
+        customMood.classList.remove('show');
+    }
+});
+
+cancelBtn.addEventListener('click', closeForm);
+
+function closeForm() {
+    thoughtForm.classList.remove('show');
+    customMood.classList.remove('show');
+    moodSelect.value = 'joy';
+    customMoodName.value = '';
+    customMoodEmoji.value = '';
+    htmlToggle.checked = false;
+    simpleText.style.display = 'block';
+    htmlEditor.classList.remove('show');
+    thoughtText.value = '';
+    htmlContent.value = '';
+    thoughtTitle.value = '';
+}
+
+// Clear all ghosts
+clearThoughtsBtn.addEventListener('click', () => {
+    document.querySelectorAll('.ghost-container').forEach(el => el.remove());
+    ghostPositions.clear();
+    localStorage.removeItem('thoughts');
+    sampleThoughtsUsed.clear();
+    message.classList.remove('show');
+});
+
+// Spawn a random ghost
+spawnThoughtBtn.addEventListener('click', () => {
+    const saved = JSON.parse(localStorage.getItem('thoughts') || '[]');
+    
+    // If no thoughts in storage, use sample thoughts
+    if (saved.length === 0) {
+        const sampleThoughts = [
+            { title: "Happy Day", text: "I'm so happy I could float forever!", mood: "joy", date: new Date().toLocaleDateString() },
+            { title: "Feeling Blue", text: "Sometimes I feel blue for no reason", mood: "sadness", date: new Date().toLocaleDateString() },
+            { title: "Angry Moment", text: "That really makes me mad!", mood: "anger", date: new Date().toLocaleDateString() },
+            { title: "Scared Thoughts", text: "I'm scared of what might happen tomorrow", mood: "fear", date: new Date().toLocaleDateString() },
+            { title: "Disgusting!", text: "Eww, that's disgusting!", mood: "disgust", date: new Date().toLocaleDateString() },
+            { title: "In Love", text: "My heart beats for you, even though I don't have one!", mood: "inlove", date: new Date().toLocaleDateString() }
+        ];
+        
+        // Find a sample thought that hasn't been used yet
+        const availableThoughts = sampleThoughts.filter(thought => 
+            !sampleThoughtsUsed.has(thought.text)
+        );
+        
+        if (availableThoughts.length > 0) {
+            const randomThought = availableThoughts[Math.floor(Math.random() * availableThoughts.length)];
+            sampleThoughtsUsed.add(randomThought.text);
+            createGhost(randomThought);
+            
+            // Save to localStorage to maintain state
+            const thoughts = JSON.parse(localStorage.getItem('thoughts') || '[]');
+            thoughts.push(randomThought);
+            localStorage.setItem('thoughts', JSON.stringify(thoughts));
+            
+            // Show message if all sample thoughts have been used
+            if (sampleThoughtsUsed.size >= sampleThoughts.length) {
+                message.classList.add('show');
+            }
+        } else {
+            message.classList.add('show');
+        }
+    } else if (saved.length > 0) {
+        const randomThought = saved[Math.floor(Math.random() * saved.length)];
+        createGhost(randomThought);
+    } else {
+        alert('No thoughts available! Add some thoughts first.');
+    }
+});
+
+// Create a ghost with the given thought
+function createGhost(thought, x = null, y = null) {
+    const ghostContainer = document.createElement('div');
+    ghostContainer.className = 'ghost-container';
+    
+    const ghost = document.createElement('div');
+    ghost.className = `ghost ${thought.mood}`;
+    
+    // Create ghost elements
+    const ghostBody = document.createElement('div');
+    ghostBody.className = 'ghost-body';
+    
+    const ghostEyes = document.createElement('div');
+    ghostEyes.className = 'ghost-eyes';
+    
+    const leftEye = document.createElement('div');
+    leftEye.className = 'ghost-eye';
+    
+    const rightEye = document.createElement('div');
+    rightEye.className = 'ghost-eye';
+    
+    const mouth = document.createElement('div');
+    mouth.className = 'ghost-mouth';
+    
+    const skirt = document.createElement('div');
+    skirt.className = 'ghost-skirt';
+    
+    // Create heart for inlove ghost
+    const heart = document.createElement('div');
+    heart.className = 'heart';
+    
+    // Create 3 folds for the skirt
+    for (let i = 0; i < 3; i++) {
+        const fold = document.createElement('div');
+        fold.className = 'ghost-fold';
+        skirt.appendChild(fold);
+    }
+    
+    // Assemble the ghost
+    ghostEyes.appendChild(leftEye);
+    ghostEyes.appendChild(rightEye);
+    ghost.appendChild(ghostBody);
+    ghost.appendChild(ghostEyes);
+    ghost.appendChild(mouth);
+    ghost.appendChild(skirt);
+    ghost.appendChild(heart);
+    
+    // Create speech balloon
+    const balloon = document.createElement('div');
+    balloon.className = 'balloon';
+    
+    // Display custom mood name if it's an "other" mood
+    let moodDisplay = thought.mood;
+    if (thought.mood === 'other') {
+        if (thought.customMood && thought.customMood.name) {
+            moodDisplay = thought.customMood.name;
+        } else {
+            moodDisplay = "Mystery Mood";
+        }
+    }
+    
+    // Add emoji if available
+    let emojiDisplay = "";
+    if (thought.mood === 'other' && thought.customMood && thought.customMood.emoji) {
+        emojiDisplay = " " + thought.customMood.emoji;
+    }
+    
+    // Show title or preview text in balloon
+    let previewText = thought.title || "";
+    
+    if (!previewText && thought.htmlContent) {
+        previewText = "Click to view full post...";
+    } else if (!previewText) {
+        // Show first line of text if no title
+        const firstLineEnd = thought.text.indexOf('\n');
+        if (firstLineEnd !== -1) {
+            previewText = thought.text.substring(0, firstLineEnd);
+            if (previewText.length > 80) {
+                previewText = previewText.substring(0, 80) + "...";
+            }
+        } else if (thought.text.length > 80) {
+            previewText = thought.text.substring(0, 80) + "...";
+        } else {
+            previewText = thought.text;
+        }
+    }
+    
+    balloon.innerHTML = `<strong>${moodDisplay.toUpperCase()}${emojiDisplay}</strong><br>${previewText}<br><small>${thought.date}</small>`;
+    ghostContainer.appendChild(balloon);
+    ghostContainer.appendChild(ghost);
+    
+    // Add class for long content
+    if ((thought.text && thought.text.length > 80) || thought.htmlContent || thought.title) {
+        balloon.classList.add('long');
+    }
+    
+    // Position the ghost
+    if (x !== null && y !== null) {
+        ghostContainer.style.left = x + 'px';
+        ghostContainer.style.top = y + 'px';
+    } else {
+        positionGhost(ghostContainer);
+    }
+    
+    document.body.appendChild(ghostContainer);
+    
+    // Store the position for this ghost
+    const ghostId = Date.now() + Math.random().toString(36).substr(2, 9);
+    ghostContainer.dataset.ghostId = ghostId;
+    ghostContainer.dataset.thought = JSON.stringify(thought);
+    ghostPositions.set(ghostId, {
+        x: parseFloat(ghostContainer.style.left),
+        y: parseFloat(ghostContainer.style.top)
+    });
+    
+    // Set mood-specific properties
+    setMoodProperties(ghost, thought.mood);
+    
+    // Hover to show balloon
+    ghostContainer.addEventListener('mouseenter', () => {
+        document.querySelectorAll('.balloon').forEach(b => b.classList.remove('show'));
+        balloon.classList.add('show');
+    });
+    
+    ghostContainer.addEventListener('mouseleave', () => {
+        balloon.classList.remove('show');
+    });
+    
+    // Click to show full blog view
+    ghostContainer.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const thoughtData = JSON.parse(ghostContainer.dataset.thought);
+        showBlogView(thoughtData);
+    });
+    
+    // Mouse movement with mood-specific behavior
+    document.addEventListener('mousemove', (e) => {
+        const ghostRect = ghostContainer.getBoundingClientRect();
+        const ghostCenterX = ghostRect.left + ghostRect.width / 2;
+        const ghostCenterY = ghostRect.top + ghostRect.height / 2;
+        
+        const distance = Math.sqrt(
+            Math.pow(e.clientX - ghostCenterX, 2) + 
+            Math.pow(e.clientY - ghostCenterY, 2)
+        );
+        
+        if (distance < evasionRadius) {
+            // Calculate direction based on mood
+            let dx = (ghostCenterX - e.clientX);
+            let dy = (ghostCenterY - e.clientY);
+            
+            // Normalize and apply mood-specific multipliers
+            const norm = Math.sqrt(dx * dx + dy * dy);
+            dx /= norm;
+            dy /= norm;
+            
+            // Apply mood-specific behavior
+            applyMoodBehavior(ghostContainer, dx, dy, thought.mood, e);
+        }
+    });
+    
+    // Start floating animation
+    moveGhost(ghostContainer, thought.mood);
+}
+
+// Show full blog view
+function showBlogView(thought) {
+    // Set blog content
+    blogGhost.className = `blog-ghost ${thought.mood}`;
+    
+    // Set mood-specific properties for blog ghost
+    setMoodProperties(blogGhost, thought.mood);
+    
+    // Display custom mood name if it's an "other" mood
+    let moodDisplay = thought.mood;
+    if (thought.mood === 'other') {
+        if (thought.customMood && thought.customMood.name) {
+            moodDisplay = thought.customMood.name;
+        } else {
+            moodDisplay = "Mystery Mood";
+        }
+    }
+    
+    // Add emoji if available
+    let emojiDisplay = "";
+    if (thought.mood === 'other' && thought.customMood && thought.customMood.emoji) {
+        emojiDisplay = " " + thought.customMood.emoji;
+    }
+    
+    blogMood.textContent = `${moodDisplay.toUpperCase()}${emojiDisplay}`;
+    blogDate.textContent = thought.date;
+    blogTitle.textContent = thought.title || "Untitled Thought";
+    blogText.textContent = thought.text;
+    
+    // Display HTML content if available
+    if (thought.htmlContent) {
+        blogHtml.innerHTML = thought.htmlContent;
+        blogHtml.style.display = 'block';
+    } else {
+        blogHtml.style.display = 'none';
+    }
+    
+    // Show the overlay
+    blogOverlay.classList.add('active');
+}
+
+// Close blog view
+blogClose.addEventListener('click', () => {
+    blogOverlay.classList.remove('active');
+});
+
+// Close blog view when clicking outside content
+blogOverlay.addEventListener('click', (e) => {
+    if (e.target === blogOverlay) {
+        blogOverlay.classList.remove('active');
+    }
+});
+
+// Position ghost in an available space
+function positionGhost(ghostContainer) {
+    const ghostWidth = 60;
+    const ghostHeight = 80;
+    const padding = 20;
+    
+    // Try to find a position that doesn't overlap with existing ghosts
+    let attempts = 0;
+    let placed = false;
+    
+    while (!placed && attempts < 50) {
+        const x = padding + Math.random() * (window.innerWidth - ghostWidth - padding * 2);
+        const y = padding + Math.random() * (window.innerHeight - ghostHeight - padding * 2 - 100);
+        
+        // Check if this position overlaps with existing ghosts
+        const overlapping = Array.from(document.querySelectorAll('.ghost-container')).some(existingGhost => {
+            const rect = existingGhost.getBoundingClientRect();
+            return !(x > rect.right + padding || x + ghostWidth < rect.left - padding ||
+                    y > rect.bottom + padding || y + ghostHeight < rect.top - padding);
+        });
+        
+        if (!overlapping) {
+            ghostContainer.style.left = x + 'px';
+            ghostContainer.style.top = y + 'px';
+            placed = true;
+        }
+        
+        attempts++;
+    }
+    
+    // If we couldn't find a non-overlapping position, place it randomly
+    if (!placed) {
+        ghostContainer.style.left = Math.random() * (window.innerWidth - 100) + 'px';
+        ghostContainer.style.top = (50 + Math.random() * (window.innerHeight - 200)) + 'px';
+    }
+}
+
+// Set visual properties based on mood
+function setMoodProperties(ghost, mood) {
+    // For "other" moods, randomly assign properties from existing moods
+    const actualMood = mood === 'other' ? getRandomMood() : mood;
+    
+    switch(actualMood) {
+        case 'joy':
+            ghost.style.transform = 'scale(1.1)';
+            ghost.style.filter = 'brightness(1.2)';
+            break;
+        case 'sadness':
+            ghost.style.opacity = '0.8';
+            break;
+        case 'anger':
+            ghost.querySelector('.ghost-mouth').style.backgroundColor = 'red';
+            break;
+        case 'fear':
+            ghost.style.transition = 'all 0.3s';
+            setInterval(() => {
+                ghost.style.transform = `translateX(${Math.random() > 0.5 ? 1 : -1}px)`;
+            }, 300);
+            break;
+        case 'disgust':
+            ghost.style.opacity = '0.9';
+            break;
+        case 'inlove':
+            const eyes = ghost.querySelectorAll('.ghost-eye');
+            eyes.forEach(eye => {
+                eye.style.borderRadius = '0';
+                eye.style.transform = 'rotate(45deg)';
+                eye.style.width = '6px';
+                eye.style.height = '6px';
+            });
+            break;
+    }
+}
+
+// Get a random mood for "other" mood types
+function getRandomMood() {
+    const moods = ['joy', 'sadness', 'anger', 'fear', 'disgust', 'inlove'];
+    return moods[Math.floor(Math.random() * moods.length)];
+}
+
+// Apply mood-specific behavior
+function applyMoodBehavior(ghostContainer, dx, dy, mood, mouseEvent) {
+    // For "other" moods, randomly assign behavior from existing moods
+    const actualMood = mood === 'other' ? getRandomMood() : mood;
+    
+    const behaviorStrength = 0.8;
+    
+    // Mood-specific behavior multipliers
+    let speedMultiplier = 1;
+    let jitterX = 0;
+    let jitterY = 0;
+    
+    switch(actualMood) {
+        case 'joy':
+            speedMultiplier = 0.8;
+            jitterX = (Math.random() - 0.5) * 0.3;
+            jitterY = (Math.random() - 0.5) * 0.3;
+            break;
+        case 'sadness':
+            speedMultiplier = 0.5;
+            break;
+        case 'anger':
+            speedMultiplier = 1.0;
+            jitterX = (Math.random() - 0.5) * 1;
+            jitterY = (Math.random() - 0.5) * 1;
+            break;
+        case 'fear':
+            speedMultiplier = 1.2;
+            jitterX = (Math.random() - 0.5) * 1.5;
+            jitterY = (Math.random() - 0.5) * 1.5;
+            break;
+        case 'disgust':
+            speedMultiplier = 0.4;
+            break;
+        case 'inlove':
+            speedMultiplier = -1.2;
+            jitterX = (Math.random() - 0.5) * 0.5;
+            jitterY = (Math.random() - 0.5) * 0.5;
+            
+            const ghostRect = ghostContainer.getBoundingClientRect();
+            const ghostCenterX = ghostRect.left + ghostRect.width / 2;
+            const ghostCenterY = ghostRect.top + ghostRect.height / 2;
+            
+            const towardX = (mouseEvent.clientX - ghostCenterX) * 0.02;
+            const towardY = (mouseEvent.clientY - ghostCenterY) * 0.02;
+            
+            jitterX += towardX;
+            jitterY += towardY;
+            break;
+    }
+    
+    // Calculate new position with mood-specific behavior
+    const currentX = parseFloat(ghostContainer.style.left || 0);
+    const currentY = parseFloat(ghostContainer.style.top || 0);
+    
+    const newX = currentX + (dx * behaviorStrength * speedMultiplier) + jitterX;
+    const newY = currentY + (dy * behaviorStrength * speedMultiplier) + jitterY;
+    
+    // Keep within bounds
+    const boundedX = Math.max(0, Math.min(window.innerWidth - 100, newX));
+    const boundedY = Math.max(0, Math.min(window.innerHeight - 150, newY));
+    
+    ghostContainer.style.left = boundedX + 'px';
+    ghostContainer.style.top = boundedY + 'px';
+    
+    // Update stored position
+    const ghostId = ghostContainer.dataset.ghostId;
+    if (ghostId && ghostPositions.has(ghostId)) {
+        ghostPositions.set(ghostId, { x: boundedX, y: boundedY });
+    }
+}
+
+// Make the ghost float with mood-specific movement
+function moveGhost(ghostContainer, mood) {
+    // For "other" moods, randomly assign movement from existing moods
+    const actualMood = mood === 'other' ? getRandomMood() : mood;
+    
+    // Mood-specific floating parameters
+    let floatRangeX, floatRangeY, floatSpeed;
+    
+    switch(actualMood) {
+        case 'joy':
+            floatRangeX = 1 + Math.random() * 0.5;
+            floatRangeY = 1 + Math.random() * 0.5;
+            floatSpeed = 0.01 + Math.random() * 0.005;
+            break;
+        case 'sadness':
+            floatRangeX = 0.5 + Math.random() * 0.3;
+            floatRangeY = 0.8 + Math.random() * 0.4;
+            floatSpeed = 0.008 + Math.random() * 0.004;
+            break;
+        case 'anger':
+            floatRangeX = 1.5 + Math.random() * 0.8;
+            floatRangeY = 1 + Math.random() * 0.5;
+            floatSpeed = 0.015 + Math.random() * 0.008;
+            break;
+        case 'fear':
+            floatRangeX = 2 + Math.random() * 1;
+            floatRangeY = 1.5 + Math.random() * 0.8;
+            floatSpeed = 0.02 + Math.random() * 0.01;
+            break;
+        case 'disgust':
+            floatRangeX = 0.5 + Math.random() * 0.3;
+            floatRangeY = 0.5 + Math.random() * 0.3;
+            floatSpeed = 0.01 + Math.random() * 0.005;
+            break;
+        case 'inlove':
+            floatRangeX = 0.8 + Math.random() * 0.4;
+            floatRangeY = 1.2 + Math.random() * 0.6;
+            floatSpeed = 0.015 + Math.random() * 0.007;
+            break;
+        default:
+            floatRangeX = 1 + Math.random() * 0.5;
+            floatRangeY = 1 + Math.random() * 0.5;
+            floatSpeed = 0.01 + Math.random() * 0.005;
+    }
+    
+    let angle = Math.random() * Math.PI * 2;
+    let xDirection = Math.random() > 0.5 ? 1 : -1;
+    let yDirection = Math.random() > 0.5 ? 1 : -1;
+    
+    // Add more random directional changes
+    let directionChangeCounter = 0;
+    const directionChangeFrequency = 50 + Math.floor(Math.random() * 100);
+    
+    function animate() {
+        if (!document.body.contains(ghostContainer)) return;
+        
+        // Occasionally change direction randomly
+        directionChangeCounter++;
+        if (directionChangeCounter > directionChangeFrequency) {
+            if (Math.random() > 0.7) xDirection *= -1;
+            if (Math.random() > 0.7) yDirection *= -1;
+            directionChangeCounter = 0;
+        }
+        
+        // Calculate floating movement
+        const floatX = Math.sin(angle) * floatRangeX * xDirection;
+        const floatY = Math.cos(angle * 0.7) * floatRangeY * yDirection;
+        
+        // Apply floating to position
+        const currentX = parseFloat(ghostContainer.style.left || 0);
+        const currentY = parseFloat(ghostContainer.style.top || 0);
+        
+        const newX = currentX + floatX;
+        const newY = currentY + floatY;
+        
+        // Keep within bounds with gentle bouncing and change direction when hitting edges
+        let boundedX = newX;
+        let boundedY = newY;
+        
+        if (newX > window.innerWidth - 100) {
+            boundedX = window.innerWidth - 100;
+            xDirection = -1;
+        }
+        if (newX < 0) {
+            boundedX = 0;
+            xDirection = 1;
+        }
+        if (newY > window.innerHeight - 150) {
+            boundedY = window.innerHeight - 150;
+            yDirection = -1;
+        }
+        if (newY < 0) {
+            boundedY = 0;
+            yDirection = 1;
+        }
+        
+        ghostContainer.style.left = boundedX + 'px';
+        ghostContainer.style.top = boundedY + 'px';
+        
+        // Update stored position
+        const ghostId = ghostContainer.dataset.ghostId;
+        if (ghostId && ghostPositions.has(ghostId)) {
+            ghostPositions.set(ghostId, { x: boundedX, y: boundedY });
+        }
+        
+        angle += floatSpeed;
+        requestAnimationFrame(animate);
+    }
+    
+    animate();
+}
+
+// Check if thought already exists
+function thoughtExists(newThought, thoughts) {
+    return thoughts.some(thought => {
+        // Check if text content is the same
+        if (thought.text === newThought.text) return true;
+        
+        // Check if HTML content is the same (if both have HTML content)
+        if (thought.htmlContent && newThought.htmlContent && 
+            thought.htmlContent === newThought.htmlContent) return true;
+            
+        return false;
+    });
+}
+
+// Load ghosts from localStorage
+function loadGhosts() {
+    document.querySelectorAll('.ghost-container').forEach(el => el.remove());
+    ghostPositions.clear();
+    
+    const saved = JSON.parse(localStorage.getItem('thoughts') || '[]');
+    
+    // Limit to maxGhosts and select the most recent ones
+    const recentThoughts = saved.slice(0, maxGhosts);
+    
+    recentThoughts.forEach(thought => createGhost(thought));
+}
+
+// Save a new thought
+submitBtn.onclick = () => {
+    const text = thoughtText.value.trim();
+    const html = htmlContent.value.trim();
+    const title = thoughtTitle.value.trim();
+    let mood = moodSelect.value;
+    let customMoodData = null;
+    
+    if (!text && !html) return;
+    
+    // Handle custom mood
+    if (mood === 'other') {
+        const customName = customMoodName.value.trim();
+        const customEmoji = customMoodEmoji.value.trim();
+        
+        if (customName || customEmoji) {
+            customMoodData = {
+                name: customName || "Mystery Mood",
+                emoji: customEmoji || "🤔"
+            };
+        }
+    }
+    
+    const date = new Date().toLocaleDateString();
+
+    let thoughts = JSON.parse(localStorage.getItem('thoughts') || '[]');
+    
+    // Check if we've reached the maximum number of thoughts
+    if (thoughts.length >= maxGhosts) {
+        alert(`You've reached the maximum of ${maxGhosts} thoughts. Delete some before adding more.`);
+        closeForm();
+        return;
+    }
+    
+    const newThought = { 
+        title: title || null,
+        text: text || "HTML Content", 
+        mood, 
+        date,
+        customMood: customMoodData,
+        htmlContent: htmlToggle.checked ? html : null
+    };
+    
+    // Check if this thought already exists
+    if (thoughtExists(newThought, thoughts)) {
+        alert("This thought already exists!");
+        return;
+    }
+    
+    // Add new thought to the beginning and limit to maxGhosts
+    thoughts.unshift(newThought);
+    
+    if (thoughts.length > maxGhosts) {
+        thoughts = thoughts.slice(0, maxGhosts);
+    }
+    
+    localStorage.setItem('thoughts', JSON.stringify(thoughts));
+
+    thoughtText.value = '';
+    htmlContent.value = '';
+    thoughtTitle.value = '';
+    closeForm();
+    
+    // Instead of reloading all ghosts, just create the new one
+    createGhost(newThought);
+};
+
+// Initialize on load
+window.onload = loadGhosts;
+
+// Add some sample thoughts if none exist
+if (!localStorage.getItem('thoughts') || JSON.parse(localStorage.getItem('thoughts')).length === 0) {
+    const sampleThoughts = [
+        { title: "Happy Day", text: "I'm so happy I could float forever!", mood: "joy", date: new Date().toLocaleDateString() },
+        { title: "Feeling Blue", text: "Sometimes I feel blue for no reason", mood: "sadness", date: new Date().toLocaleDateString() },
+        { title: "Angry Moment", text: "That really makes me mad!", mood: "anger", date: new Date().toLocaleDateString() },
+        { title: "Scared Thoughts", text: "I'm scared of what might happen tomorrow", mood: "fear", date: new Date().toLocaleDateString() },
+        { title: "Disgusting!", text: "Eww, that's disgusting!", mood: "disgust", date: new Date().toLocaleDateString() },
+        { title: "In Love", text: "My heart beats for you, even though I don't have one!", mood: "inlove", date: new Date().toLocaleDateString() }
+    ];
+    localStorage.setItem('thoughts', JSON.stringify(sampleThoughts));
+    loadGhosts();
+}
+</script>
+</body>
+</html>
