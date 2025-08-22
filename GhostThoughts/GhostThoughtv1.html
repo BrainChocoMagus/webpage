@@ -7,12 +7,21 @@
   <link rel="stylesheet" href="ghost-style.css"> <!-- keep your CSS separate for readability -->
   
   <!-- Supabase client -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
+  
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
     const SUPABASE_URL = "https://Ghostthought.supabase.co"; // replace
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ma3JraG12cXl0aGthbHNma2NtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU4MjU5MjYsImV4cCI6MjA3MTQwMTkyNn0.OYjwJrb2YHSMEo4bdtjz9A2mopDzSjeH8jq9HTxtmuU"; // replace
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const maxGhosts = 20;
+    const evasionRadius = 150;
+    const ghostPositions = new Map();
+    let sampleThoughtsUsed = new Set();
   </script>
+
+
 </head>
 <body>
   <div class="header">
@@ -146,6 +155,8 @@
     const blogText = document.getElementById('blogText');
     const blogHtml = document.getElementById('blogHtml');
     const message = document.getElementById('message');
+    
+
     
 
     addThoughtBtn.addEventListener('click', () => {
