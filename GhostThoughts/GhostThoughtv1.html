@@ -11,14 +11,10 @@
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-    const SUPABASE_URL = "https://Ghostthought.supabase.co"; // replace
+    const SUPABASE_URL = "https://mfkrkhmvqythkalsfkcm.supabase.co"; // replace
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ma3JraG12cXl0aGthbHNma2NtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU4MjU5MjYsImV4cCI6MjA3MTQwMTkyNn0.OYjwJrb2YHSMEo4bdtjz9A2mopDzSjeH8jq9HTxtmuU"; // replace
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    const maxGhosts = 20;
-    const evasionRadius = 150;
-    const ghostPositions = new Map();
-    let sampleThoughtsUsed = new Set();
   </script>
 
 
@@ -112,21 +108,39 @@
   </footer>
 
   <script>
+    
+  // Global variables
+    const maxGhosts = 20;
+    const evasionRadius = 150;
+    const ghostPositions = new Map();
+    let sampleThoughtsUsed = new Set();
+
     // --- Supabase CRUD helpers ---
     async function saveThought(thought) {
       const { error } = await supabase.from('thoughts').insert([thought]);
-      if (error) console.error('Save error:', error);
+      if (error) {
+        console.error('Save error:', error);
+        alert('Error saving thought: ' + error.message);
+      }
+      return !error;
     }
 
     async function loadThoughts() {
       const { data, error } = await supabase.from('thoughts').select('*').order('created_at', { ascending: false });
-      if (error) { console.error('Load error:', error); return []; }
+      if (error) { 
+        console.error('Load error:', error); 
+        return []; 
+      }
       return data;
     }
 
     async function clearThoughts() {
       const { error } = await supabase.from('thoughts').delete().neq('id', 0);
-      if (error) console.error('Clear error:', error);
+      if (error) {
+        console.error('Clear error:', error);
+        alert('Error clearing thoughts: ' + error.message);
+      }
+      return !error;
     }
 
     // DOM elements
@@ -157,7 +171,163 @@
     const message = document.getElementById('message');
     
 
-    
+      // ========== FORM TOGGLE ==========
+    htmlToggle.addEventListener('change', () => {
+      if (htmlToggle.checked) {
+        simpleText.style.display = 'none';
+        htmlEditor.classList.add('show');
+      } else {
+        simpleText.style.display = 'block';
+        htmlEditor.classList.remove('show');
+      }
+    });
+
+    addThoughtBtn.addEventListener('click', () => {
+      thoughtForm.classList.toggle('show');
+      message.classList.remove('show');
+    });
+
+    moodSelect.addEventListener('change', () => {
+      if (moodSelect.value === 'other') customMood.classList.add('show');
+      else customMood.classList.remove('show');
+    });
+
+    cancelBtn.addEventListener('click', closeForm);
+
+    function closeForm() {
+      thoughtForm.classList.remove('show');
+      customMood.classList.remove('show');
+      moodSelect.value = 'joy';
+      customMoodName.value = '';
+      customMoodEmoji.value = '';
+      htmlToggle.checked = false;
+      simpleText.style.display = 'block';
+      htmlEditor.classList.remove('show');
+      thoughtText.value = '';
+      htmlContent.value = '';
+      thoughtTitle.value = '';
+    }
+
+    // ========== CLEAR ==========
+    clearThoughtsBtn.addEventListener('click', async () => {
+      document.querySelectorAll('.ghost-container').forEach(el => el.remove());
+      ghostPositions.clear();
+      sampleThoughtsUsed.clear();
+      message.classList.remove('show');
+      await supabase.from("thoughts").delete().neq("id", 0); // deletes all rows
+    });
+
+    // ========== SPAWN ==========
+    spawnThoughtBtn.addEventListener('click', async () => {
+      const { data: saved, error } = await supabase.from("thoughts").select("*").order("created_at", { ascending: false });
+
+      if (!error && saved && saved.length > 0) {
+        const randomThought = saved[Math.floor(Math.random() * saved.length)];
+        createGhost(randomThought);
+        return;
+      }
+
+      // fallback samples
+      const sampleThoughts = [
+        { title: "Happy Day", text: "I'm so happy I could float forever!", mood: "joy", date: new Date().toLocaleDateString() },
+        { title: "Feeling Blue", text: "Sometimes I feel blue for no reason", mood: "sadness", date: new Date().toLocaleDateString() },
+        { title: "Angry Moment", text: "That really makes me mad!", mood: "anger", date: new Date().toLocaleDateString() },
+        { title: "Scared Thoughts", text: "I'm scared of what might happen tomorrow", mood: "fear", date: new Date().toLocaleDateString() },
+        { title: "Disgusting!", text: "Eww, that's disgusting!", mood: "disgust", date: new Date().toLocaleDateString() },
+        { title: "In Love", text: "My heart beats for you, even though I don't have one!", mood: "inlove", date: new Date().toLocaleDateString() }
+      ];
+
+      const available = sampleThoughts.filter(t => !sampleThoughtsUsed.has(t.text));
+      if (available.length > 0) {
+        const randomThought = available[Math.floor(Math.random() * available.length)];
+        sampleThoughtsUsed.add(randomThought.text);
+        createGhost(randomThought);
+        if (sampleThoughtsUsed.size >= sampleThoughts.length) message.classList.add('show');
+      } else {
+        message.classList.add('show');
+      }
+    });
+
+    // ========== SAVE ==========
+    submitBtn.onclick = async () => {
+      const text = thoughtText.value.trim();
+      const html = htmlContent.value.trim();
+      const title = thoughtTitle.value.trim();
+      let mood = moodSelect.value;
+      let customMoodData = null;
+
+      if (!text && !html) return;
+
+      if (mood === 'other') {
+        const customName = customMoodName.value.trim();
+        const customEmoji = customMoodEmoji.value.trim();
+        if (customName || customEmoji) {
+          customMoodData = { name: customName || "Mystery Mood", emoji: customEmoji || "🤔" };
+        }
+      }
+
+      const date = new Date().toLocaleDateString();
+
+      // Insert into Supabase
+      const { data, error } = await supabase.from("thoughts").insert([{
+        title: title || null,
+        text: text || "HTML Content",
+        html_content: htmlToggle.checked ? html : null,
+        mood,
+        custom_mood: customMoodData,
+        created_at: new Date().toISOString()
+      }]).select();
+
+      if (error) {
+        alert("Error saving thought: " + error.message);
+        return;
+      }
+
+      // Add ghost immediately
+      createGhost({
+        title: data[0].title,
+        text: data[0].text,
+        htmlContent: data[0].html_content,
+        mood: data[0].mood,
+        customMood: data[0].custom_mood,
+        date
+      });
+
+      thoughtText.value = '';
+      htmlContent.value = '';
+      thoughtTitle.value = '';
+      closeForm();
+    };
+
+    // ========== LOAD ON START ==========
+    async function loadGhosts() {
+      document.querySelectorAll('.ghost-container').forEach(el => el.remove());
+      ghostPositions.clear();
+
+      const { data: saved, error } = await supabase.from("thoughts").select("*").order("created_at", { ascending: false }).limit(maxGhosts);
+
+      if (!error && saved && saved.length > 0) {
+        saved.forEach(thought => {
+          createGhost({
+            title: thought.title,
+            text: thought.text,
+            htmlContent: thought.html_content,
+            mood: thought.mood,
+            customMood: thought.custom_mood,
+            date: new Date(thought.created_at).toLocaleDateString()
+          });
+        });
+      } else {
+        // fallback samples
+        const sampleThoughts = [
+          { title: "Happy Day", text: "I'm so happy I could float forever!", mood: "joy", date: new Date().toLocaleDateString() },
+          { title: "Feeling Blue", text: "Sometimes I feel blue for no reason", mood: "sadness", date: new Date().toLocaleDateString() }
+        ];
+        sampleThoughts.forEach(t => createGhost(t));
+      }
+    }
+
+    window.onload = loadGhosts;
 
     addThoughtBtn.addEventListener('click', () => {
       document.getElementById('thoughtForm').classList.toggle('show');
@@ -199,9 +369,8 @@
       document.querySelectorAll('.ghost-container').forEach(el => el.remove());
     });
 
-    // Store ghost positions
-const ghostPositions = new Map();
-let sampleThoughtsUsed = new Set();
+ 
+
 
 // Toggle HTML editor
 htmlToggle.addEventListener('change', () => {
