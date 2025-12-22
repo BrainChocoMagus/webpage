@@ -3,6 +3,7 @@ const post = document.getElementById("post");
 const tagsDiv = document.getElementById("tags");
 const toggleTagsBtn = document.getElementById("toggleTags");
 const activeFilter = document.getElementById("activeFilter");
+activeFilter.onclick = clearActiveFilter;
 
 
 let posts = [];
@@ -16,7 +17,6 @@ fetch("posts.json")
   ))
   .then(textos => {
     textos.forEach(parsePost);
-    renderTags();
     posts.sort((a, b) => new Date(b.date) - new Date(a.date));
     renderList(posts);
   })
@@ -75,7 +75,7 @@ function renderList(arr) {
 function renderTags() {
   tagsDiv.innerHTML = "";
 
-  const radius = 80;
+  const radius = 100;
   const centerX = tagsDiv.offsetWidth / 2;
   const centerY = tagsDiv.offsetHeight / 2;
 
@@ -88,32 +88,38 @@ function renderTags() {
     el.textContent = `#${tag}`;
 
     const angle = step * i;
-    const x = centerX + radius * Math.cos(angle);
-    const y = centerY + radius * Math.sin(angle);
-
-    el.style.left = `${x}px`;
-    el.style.top = `${y}px`;
+    el.style.left = `${centerX + radius * Math.cos(angle)}px`;
+    el.style.top = `${centerY + radius * Math.sin(angle)}px`;
 
     el.onclick = () => filtrarPorTag(tag);
     tagsDiv.appendChild(el);
   });
 }
 
+
 //toggle tags
 toggleTagsBtn.onclick = () => {
   tagsDiv.classList.toggle("active");
+  if (tagsDiv.classList.contains("active")) {
+    renderTags();
+  }
 };
 
 // Filtrar por tag
 function filtrarPorTag(tag) {
-  renderList(posts.filter(p => p.tags.includes(tag)));
+  const filtrados = posts.filter(p => p.tags.includes(tag));
+  renderList(filtrados);
+  setActiveFilter(tag);
 }
 
 // Filtrar por año y mes
-function filtrarPorFecha(year, month) {
-  renderList(
-    posts.filter(p => p.date.startsWith(`${year}-${month}`))
+function filtrarPorFecha(year, month = "") {
+  const filtro = posts.filter(p =>
+    p.date && p.date.startsWith(`${year}-${month}`)
   );
+
+  renderList(filtro);
+  setActiveFilter(month ? `${year}-${month}` : year);
 }
 
 // Modo lectura
@@ -121,11 +127,6 @@ function modoLectura() {
   document.body.classList.toggle("lectura");
 }
 
-function filtrarPorTag(tag) {
-  const filtrados = posts.filter(p => p.tags.includes(tag));
-  renderList(filtrados);
-  setActiveFilter(tag);
-}
 
 function mostrarTodos() {
   renderList(posts);
@@ -152,7 +153,6 @@ function setActiveFilter(label) {
 function clearActiveFilter() {
   activeFilter.textContent = "";
   activeFilter.style.display = "none";
-    activeFilter.onclick = clearActiveFilter;
 
   renderList(posts);
 }
