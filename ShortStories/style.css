@@ -76,7 +76,12 @@ body.lectura article {
   }
 
   body {
+    background: #12091f;
+    color: #e6dcff;
+    font-family: serif;
     padding: 1rem;
+    
+
   }
 
   article {
