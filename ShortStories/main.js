@@ -8,12 +8,15 @@ let tagsSet = new Set();
 // Cargar lista de archivos
 fetch("posts.json")
   .then(r => r.json())
-  .then(files => Promise.all(files.map(f => fetch(f).then(r => r.text()))))
+  .then(files => Promise.all(
+    files.map(f => fetch(f).then(r => r.text()))
+  ))
   .then(textos => {
     textos.forEach(parsePost);
     renderTags();
     renderList(posts);
-  });
+  })
+  .catch(err => console.error("ERROR:", err));
 
 // Leer cada post
 function parsePost(text) {
