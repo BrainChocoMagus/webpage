@@ -1,6 +1,7 @@
 const list = document.getElementById("list");
 const post = document.getElementById("post");
 const tagsDiv = document.getElementById("tags");
+const toggleTagsBtn = document.getElementById("toggleTags");
 
 let posts = [];
 let tagsSet = new Set();
@@ -82,6 +83,11 @@ function renderTags() {
     tagsDiv.appendChild(el);
   });
 }
+
+//toggle tags
+toggleTagsBtn.onclick = () => {
+  tagsDiv.classList.toggle("active");
+};
 
 // Filtrar por tag
 function filtrarPorTag(tag) {

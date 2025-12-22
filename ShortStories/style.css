@@ -31,7 +31,8 @@ button {
 #tags {
   position: relative;
   width: 100%;
-  height: 220px;
+  height: 300px;
+  display: none;
   margin-bottom: 2rem;
   border: 1px dashed rgba(184,156,255,0.2);
   border-radius: 12px;
@@ -49,6 +50,10 @@ button {
 .tag:hover {
   opacity: 1;
   transform: scale(1.1);
+}
+
+#tags.active {
+  display: block;
 }
 
 body.lectura #list,
