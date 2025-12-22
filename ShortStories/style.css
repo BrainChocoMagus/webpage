@@ -1,0 +1,59 @@
+body {
+  background: #12091f;
+  color: #e6dcff;
+  font-family: serif;
+  max-width: 700px;
+  margin: auto;
+  padding: 2rem;
+}
+
+button {
+  background: none;
+  border: 1px solid #b89cff;
+  color: #b89cff;
+  margin: 0.2rem;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+  max-width: 42rem;
+}
+
+#list div {
+  cursor: pointer;
+  margin: 0.4rem 0;
+  opacity: 0.8;
+}
+
+#list div:hover {
+  opacity: 1;
+}
+
+.tag {
+  position: absolute;
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+body.lectura #list,
+body.lectura #tags {
+  display: none;
+}
+
+body.lectura article {
+  font-size: 1.2rem;
+}
+
+
+@media (max-width: 600px) {
+  body {
+    padding: 1rem;
+  }
+
+  #list div {
+    font-size: 0.9rem;
+  }
+
+  article {
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+}
