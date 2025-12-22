@@ -6,7 +6,7 @@ let posts = [];
 let tagsSet = new Set();
 
 // Cargar lista de archivos
-fetch("listar.php")
+fetch("posts.json")
   .then(r => r.json())
   .then(files => Promise.all(files.map(f => fetch(f).then(r => r.text()))))
   .then(textos => {
