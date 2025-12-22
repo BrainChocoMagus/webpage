@@ -2,6 +2,8 @@ const list = document.getElementById("list");
 const post = document.getElementById("post");
 const tagsDiv = document.getElementById("tags");
 const toggleTagsBtn = document.getElementById("toggleTags");
+const activeFilter = document.getElementById("activeFilter");
+
 
 let posts = [];
 let tagsSet = new Set();
@@ -120,6 +122,37 @@ function modoLectura() {
 }
 
 function filtrarPorTag(tag) {
-  renderList(posts.filter(p => p.tags.includes(tag)));
-  post.innerHTML = `<em>Filtering by #${tag}</em>`;
+  const filtrados = posts.filter(p => p.tags.includes(tag));
+  renderList(filtrados);
+  setActiveFilter(tag);
+}
+
+function mostrarTodos() {
+  renderList(posts);
+  document.body.classList.remove("lectura");
+}
+
+function filtrarPorFecha(year, month = "") {
+  const filtro = posts.filter(p =>
+    p.date && p.date.startsWith(`${year}-${month}`)
+  );
+  const label = month
+    ? `${year}-${month}`
+    : year;
+
+  renderList(filtro);
+  setActiveFilter(label);
+}
+
+function setActiveFilter(label) {
+  activeFilter.textContent = label;
+  activeFilter.style.display = "block";
+}
+
+function clearActiveFilter() {
+  activeFilter.textContent = "";
+  activeFilter.style.display = "none";
+    activeFilter.onclick = clearActiveFilter;
+
+  renderList(posts);
 }

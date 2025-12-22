@@ -74,6 +74,22 @@ body.lectura article {
 }
 
 
+#activeFilter {
+  margin: 0.8rem 0;
+  font-size: 0.85rem;
+  color: #b89cff;
+  opacity: 0.8;
+  cursor: pointer;
+}
+
+#activeFilter:hover {
+  opacity: 1;
+}
+
+#activeFilter::before {
+  content: "✦ ";
+}
+
 @media (max-width: 600px) {
   #tags {
     height: 160px;
