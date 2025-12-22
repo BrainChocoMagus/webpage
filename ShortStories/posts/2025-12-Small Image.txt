@@ -1,0 +1,8 @@
+# Small image
+
+date: 2025-12-21
+tags: image
+image: https://www.newgrounds.com/dump/draw/0aff9772193c4c53a089376b6337238f
+---
+
+My wambo wombo hurst

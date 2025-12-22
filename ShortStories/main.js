@@ -37,21 +37,34 @@ function parsePost(text) {
 
   const content = text.split("---")[1]?.trim();
 
-  posts.push({ title, date, tags, content });
+  const image = lines.find(l => l.startsWith("image:"))
+  ?.replace("image:", "")
+  .trim();
+
+  posts.push({ title, date, tags, image,content });
 }
 
 // Render lista (diario)
 function renderList(arr) {
   list.innerHTML = "";
+
   arr.forEach(p => {
     const div = document.createElement("div");
+
+    // Título en la lista
     div.textContent = `${p.date} — ${p.title}`;
+
     div.onclick = () => {
       post.innerHTML = `
         <h2>${p.title}</h2>
+        ${p.image ? `<img src="${p.image}" class="post-image">` : ""}
         <p>${p.content.replace(/\n/g, "<br>")}</p>
       `;
+
+      // activa modo lectura automáticamente
+      document.body.classList.add("lectura");
     };
+
     list.appendChild(div);
   });
 }

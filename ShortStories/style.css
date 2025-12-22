@@ -27,6 +27,14 @@ button {
   opacity: 1;
 }
 
+.post-image {
+  max-width: 100%;
+  height:auto;
+  display: block;
+  margin: 1rem auto;
+  border-radius: 6px;
+  opacity: 0.9;
+}
 
 #tags {
   position: relative;
