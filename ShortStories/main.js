@@ -14,6 +14,7 @@ fetch("posts.json")
   .then(textos => {
     textos.forEach(parsePost);
     renderTags();
+    posts.sort((a, b) => new Date(b.date) - new Date(a.date));
     renderList(posts);
   })
   .catch(err => console.error("ERROR:", err));
@@ -57,13 +58,25 @@ function renderList(arr) {
 // Render constelaciones (tags)
 function renderTags() {
   tagsDiv.innerHTML = "";
-  tagsSet.forEach(tag => {
+
+  const radius = 80;
+  const centerX = tagsDiv.offsetWidth / 2;
+  const centerY = tagsDiv.offsetHeight / 2;
+
+  const tags = Array.from(tagsSet);
+  const step = (Math.PI * 2) / tags.length;
+
+  tags.forEach((tag, i) => {
     const el = document.createElement("div");
     el.className = "tag";
-    el.textContent = tag;
+    el.textContent = `#${tag}`;
 
-    el.style.left = Math.random() * 90 + "%";
-    el.style.top = Math.random() * 90 + "%";
+    const angle = step * i;
+    const x = centerX + radius * Math.cos(angle);
+    const y = centerY + radius * Math.sin(angle);
+
+    el.style.left = `${x}px`;
+    el.style.top = `${y}px`;
 
     el.onclick = () => filtrarPorTag(tag);
     tagsDiv.appendChild(el);
@@ -85,4 +98,9 @@ function filtrarPorFecha(year, month) {
 // Modo lectura
 function modoLectura() {
   document.body.classList.toggle("lectura");
+}
+
+function filtrarPorTag(tag) {
+  renderList(posts.filter(p => p.tags.includes(tag)));
+  post.innerHTML = `<em>Filtering by #${tag}</em>`;
 }

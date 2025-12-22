@@ -27,10 +27,28 @@ button {
   opacity: 1;
 }
 
+
+#tags {
+  position: relative;
+  width: 100%;
+  height: 220px;
+  margin-bottom: 2rem;
+  border: 1px dashed rgba(184,156,255,0.2);
+  border-radius: 12px;
+  overflow: hidden;
+}
 .tag {
   position: absolute;
   font-size: 0.8rem;
-  opacity: 0.7;
+  opacity: 0.75;
+  cursor: pointer;
+  white-space: nowrap;
+  color: #b89cff;
+  transition: transform 0.3s, opacity 0.3s;
+}
+.tag:hover {
+  opacity: 1;
+  transform: scale(1.1);
 }
 
 body.lectura #list,
@@ -44,12 +62,16 @@ body.lectura article {
 
 
 @media (max-width: 600px) {
-  body {
-    padding: 1rem;
+  #tags {
+    height: 160px;
   }
 
-  #list div {
-    font-size: 0.9rem;
+  .tag {
+    font-size: 0.7rem;
+  }
+
+  body {
+    padding: 1rem;
   }
 
   article {
