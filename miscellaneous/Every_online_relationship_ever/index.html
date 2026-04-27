@@ -1,701 +1,332 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>Ghosted · A Digital Haunting</title>
-    <style>
-        /* ------------------------------
-           RESET & MODERN DISCORD THEME
-           FULLY RESPONSIVE (PHONE + PC)
-        -------------------------------- */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Discord Ghosts :: Psychological Edition</title>
 
-        body {
-            background: #0a0b10;
-            font-family: system-ui, 'Segoe UI', 'Whitney', 'Inter', -apple-system, sans-serif;
-            height: 100vh;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 8px;
-        }
+<style>
+/* ===== RESET ===== */
+*{margin:0;padding:0;box-sizing:border-box;}
 
-        /* Main container - flexible width, perfect on mobile/desktop */
-        .app-container {
-            width: 100%;
-            max-width: 1400px;
-            height: 98vh;
-            max-height: 98vh;
-            background: #1e1f2c;
-            border-radius: 24px;
-            display: flex;
-            overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-            flex-direction: row;
-        }
+body{
+    background:#0f0f12;
+    font-family:system-ui;
+    height:100vh;
+    display:flex;
+}
 
-        /* ========= SIDEBAR (mobile: hidden via collapsible? but keep compact) ========= */
-        .sidebar-server {
-            width: 68px;
-            background: #111214;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 12px 0;
-            gap: 12px;
-            overflow-y: auto;
-            border-right: 1px solid #2b2d3a;
-            flex-shrink: 0;
-        }
+/* ===== APP ===== */
+.app-container{
+    width:100%;
+    height:100vh;
+    display:flex;
+}
 
-        .server-icon {
-            width: 44px;
-            height: 44px;
-            background: #2c2d3a;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 1.2rem;
-            color: #dbdee1;
-        }
+/* SIDEBAR */
+.sidebar-server{
+    width:65px;
+    background:#111;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:10px;
+    gap:10px;
+}
 
-        /* channel sidebar - hide on very small? we make scrollable, adjust width */
-        .channel-sidebar {
-            width: 220px;
-            background: #1e1f2c;
-            display: flex;
-            flex-direction: column;
-            padding: 14px 6px;
-            border-right: 1px solid #2b2d3a;
-            overflow-y: auto;
-            flex-shrink: 0;
-        }
+.server-icon{
+    width:45px;height:45px;
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:#2c2d3a;color:white;
+}
 
-        .channel-category {
-            font-size: 11px;
-            font-weight: 600;
-            color: #8e9297;
-            margin: 12px 0 4px 10px;
-            letter-spacing: 0.5px;
-        }
+/* CHANNELS */
+.channel-sidebar{
+    width:220px;
+    background:#1e1f2c;
+    padding:10px;
+}
 
-        .channel-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 6px 10px;
-            margin: 2px 4px;
-            border-radius: 8px;
-            color: #96989d;
-            cursor: pointer;
-            font-size: 14px;
-            transition: 0.1s;
-        }
+/* MAIN */
+.chat-main{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    background:#313338;
+    position:relative;
+}
 
-        .channel-item.active {
-            background: #393c49;
-            color: white;
-        }
+/* HEADER */
+.chat-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:10px;
+    background:#2b2d31;
+    flex-wrap:wrap;
+}
 
-        /* MAIN CHAT - FLEXIBLE */
-        .chat-main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: #313338;
-            overflow: hidden;
-            min-width: 0;
-        }
+/* MINI PROFILE */
+.profile-mini{
+    display:flex;
+    gap:5px;
+    align-items:center;
+}
 
-        .chat-header {
-            background: #2b2d31;
-            border-bottom: 1px solid #1e1f22;
-            padding: 12px 12px;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-        }
+.profile-mini img{
+    width:28px;height:28px;border-radius:50%;
+}
 
-        .channel-info {
-            color: white;
-            font-weight: 600;
-            font-size: 0.9rem;
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
+.profile-mini input{
+    width:70px;
+    background:#1e1f22;
+    border:none;color:white;
+    font-size:10px;
+}
 
-        .controls-group {
-            display: flex;
-            gap: 8px;
-            background: #1e1f22;
-            padding: 4px 12px;
-            border-radius: 40px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
+.profile-mini button{
+    font-size:10px;
+}
 
-        .ctrl-btn {
-            background: #2b2d31;
-            border: none;
-            color: #e1e3e8;
-            cursor: pointer;
-            font-size: 12px;
-            padding: 5px 12px;
-            border-radius: 24px;
-            font-weight: 500;
-            transition: 0.1s;
-            white-space: nowrap;
-        }
+/* CHAT */
+.messages-container{
+    flex:1;
+    overflow-y:auto;
+    padding:10px;
+}
 
-        .color-palette {
-            display: flex;
-            gap: 6px;
-            margin-left: 4px;
-        }
+.message{margin:8px 0;}
 
-        .color-dot {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            cursor: pointer;
-            border: 2px solid transparent;
-            transition: 0.1s;
-        }
+.avatar{
+    width:35px;height:35px;
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+}
 
-        .messages-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 14px 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-        }
+.message-row{display:flex;gap:10px;}
 
-        /* message styling */
-        .message {
-            animation: fadeIn 0.2s ease;
-        }
+.message-text{color:#dbdee1;}
 
-        .message.system {
-            text-align: center;
-            font-style: italic;
-            font-size: 12px;
-            color: #a5a9b0;
-            margin: 6px 0;
-        }
+/* INPUT */
+.chat-input-area{
+    padding:10px;
+    background:#2b2d31;
+}
 
-        .message-row {
-            display: flex;
-            gap: 10px;
-        }
+.input-wrapper{
+    display:flex;
+    gap:5px;
+}
 
-        .avatar {
-            width: 38px;
-            height: 38px;
-            background: #5865f2;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 15px;
-            flex-shrink: 0;
-        }
+#messageInput{flex:1;}
 
-        .message-content {
-            flex: 1;
-        }
+/* SCENES */
+.scene-overlay{
+    position:absolute;
+    inset:0;
+    background:rgba(10,10,15,0.95);
+    display:none;
+    z-index:999;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+}
 
-        .username {
-            font-weight: 600;
-            color: white;
-            font-size: 14px;
-        }
+.scene-overlay.active{display:flex;}
 
-        .timestamp {
-            font-size: 10px;
-            color: #8e9297;
-            margin-left: 8px;
-        }
+/* GLITCH */
+.glitch{
+    animation:glitch 0.2s infinite;
+}
+@keyframes glitch{
+    0%{transform:translate(1px,-1px);}
+    50%{transform:translate(-1px,1px);}
+}
 
-        .message-text {
-            color: #dbdee1;
-            font-size: 15px;
-            line-height: 1.4;
-            word-break: break-word;
-            transition: all 0.2s;
-        }
-
-        /* WOBBLE / ZOOM CLASSES */
-        .wobbly-text .message-text {
-            display: inline-block;
-            animation: wobbleAnim 0.35s infinite ease;
-        }
-
-        @keyframes wobbleAnim {
-            0% { transform: translate(0,0) rotate(0deg);}
-            25% { transform: translate(1px, -0.8px) rotate(0.5deg);}
-            75% { transform: translate(-0.7px, 0.6px) rotate(-0.4deg);}
-            100% { transform: translate(0,0);}
-        }
-
-        .zoom-small .message-text { font-size: 11px; }
-        .zoom-normal .message-text { font-size: 14px; }
-        .zoom-large .message-text { font-size: 18px; }
-        .zoom-xlarge .message-text { font-size: 24px; }
-
-        /* input area */
-        .chat-input-area {
-            background: #2b2d31;
-            padding: 10px 12px;
-            border-top: 1px solid #1e1f22;
-        }
-
-        .input-wrapper {
-            background: #383a40;
-            border-radius: 28px;
-            display: flex;
-            align-items: center;
-            padding: 6px 14px;
-            gap: 8px;
-        }
-
-        #messageInput {
-            flex: 1;
-            background: transparent;
-            border: none;
-            color: white;
-            font-size: 14px;
-            outline: none;
-            font-family: inherit;
-        }
-
-        .send-btn {
-            background: #5865f2;
-            border: none;
-            color: white;
-            border-radius: 30px;
-            padding: 6px 16px;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 13px;
-        }
-
-        .commentary-panel {
-            font-size: 10px;
-            background: #232428;
-            margin-top: 8px;
-            padding: 5px 10px;
-            border-radius: 20px;
-            color: #b5bac1;
-            text-align: center;
-        }
-
-        .ghost-effect {
-            opacity: 0.5;
-            filter: blur(0.6px);
-            transition: 0.2s;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(6px);}
-            to { opacity: 1; transform: translateY(0);}
-        }
-
-        /* RESPONSIVE: For phones, make sidebar narrower or hide extra text? */
-        @media (max-width: 700px) {
-            .channel-sidebar {
-                width: 160px;
-            }
-            .sidebar-server {
-                width: 56px;
-            }
-            .server-icon {
-                width: 38px;
-                height: 38px;
-                font-size: 1rem;
-            }
-            .controls-group {
-                padding: 2px 8px;
-            }
-            .ctrl-btn {
-                padding: 3px 8px;
-                font-size: 10px;
-            }
-            .color-dot {
-                width: 20px;
-                height: 20px;
-            }
-        }
-
-        @media (max-width: 550px) {
-            .channel-sidebar {
-                display: none; /* hide channel bar on tiny for better chat readability */
-            }
-            .sidebar-server {
-                width: 48px;
-            }
-            .chat-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-        }
-
-        ::-webkit-scrollbar { width: 4px; }
-    </style>
+/* RESPONSIVE */
+@media(max-width:700px){
+    .channel-sidebar{display:none;}
+}
+</style>
 </head>
+
 <body>
+
 <div class="app-container">
-    <div class="sidebar-server">
-        <div class="server-icon active">💔</div>
-        <div class="server-icon">🌙</div>
-        <div class="server-icon">👻</div>
-    </div>
 
-    <div class="channel-sidebar">
-        <div class="channel-category">✦ NARRATIVE</div>
-        <div class="channel-item active" data-channel="main"># 💬 ghost-diaries</div>
-        <div class="channel-item" data-channel="echoes"># 📜 echoes</div>
-        <div class="channel-category">⚡ CONTROLS</div>
-        <div class="channel-item" id="resetStoryBtn">🔄 reset story</div>
-        <div class="channel-category">📘 EDIT AI</div>
-        <div class="channel-item" id="openEditGuide">✏️ edit responses guide</div>
-    </div>
+<div class="sidebar-server">
+<div class="server-icon">💔</div>
+<div class="server-icon">👻</div>
+</div>
 
-    <div class="chat-main">
-        <div class="chat-header">
-            <div class="channel-info">
-                <span># 💬 ghost-diaries · </span><span style="font-size:12px;">the ghosting simulation</span>
-            </div>
-            <div class="controls-group">
-                <button class="ctrl-btn" id="zoomToggle">🔍 Zoom</button>
-                <button class="ctrl-btn" id="wobbleToggle">🌀 Wobble</button>
-                <div class="color-palette" id="colorPalette">
-                    <div class="color-dot" style="background:#dbdee1" data-color="default"></div>
-                    <div class="color-dot" style="background:#f5a97f" data-color="#f5a97f"></div>
-                    <div class="color-dot" style="background:#eb6f9e" data-color="#eb6f9e"></div>
-                    <div class="color-dot" style="background:#8aadf4" data-color="#8aadf4"></div>
-                </div>
-            </div>
-        </div>
+<div class="channel-sidebar">
+# ghost-diaries
+</div>
 
-        <div class="messages-container" id="messagesContainer"></div>
+<div class="chat-main">
 
-        <div class="chat-input-area">
-            <div class="input-wrapper">
-                <input type="text" id="messageInput" placeholder="Type something... (ghosting activates soon)">
-                <button class="send-btn" id="sendMsgBtn">Send</button>
-            </div>
-            <div class="commentary-panel" id="commentaryBox">
-                💡 Tip: Zoom, Wobble & Color work on any device. AI becomes distant after ~3 messages.
-            </div>
-        </div>
-    </div>
+<div class="chat-header">
+
+<div># ghost-diaries</div>
+
+<!-- MINI PROFILE -->
+<div class="profile-mini">
+<img id="avatarPreview" src="https://i.imgur.com/6VBx3io.png">
+<input id="nameInput" placeholder="name">
+<input id="avatarInput" placeholder="url">
+<button id="updateProfileBtn">ok</button>
+</div>
+
+</div>
+
+<div class="messages-container" id="messagesContainer"></div>
+
+<div class="chat-input-area">
+<div class="input-wrapper">
+<input id="messageInput">
+<button id="sendBtn">Send</button>
+</div>
+</div>
+
+<!-- SCENES -->
+<div id="memoryScene" class="scene-overlay">
+<h1>🌙 memory fragment</h1>
+<p id="memoryText"></p>
+<button onclick="closeScene()">return</button>
+</div>
+
+<div id="voidScene" class="scene-overlay">
+<h1>👻 no response</h1>
+<button onclick="location.reload()">restart</button>
+</div>
+
+</div>
 </div>
 
 <script>
-    // ============================================================
-    //  GHOSTING NARRATIVE ENGINE - FULLY CUSTOMIZABLE AI RESPONSES
-    //  You can EDIT the arrays below to change how the AI replies!
-    // ============================================================
-    
-    // ---------- ✏️  EDIT THESE RESPONSES TO CHANGE THE AI BEHAVIOR ----------
-    // Warm phase responses (before ghosting)
-    const WARM_RESPONSES = [
-        "💕 i love talking to you. you just get me, y'know?",
-        "🌙 i was waiting for your message... it's the highlight of my day.",
-        "✨ promise you won't disappear? everyone leaves eventually...",
-        "🌸 i feel safe when we chat. it's like we're in our own little world.",
-        "💖 don't ghost me, okay? that would shatter me.",
-        "⭐ you're so different from others online. i'm scared to lose this."
-    ];
-    
-    // Ghosting phase responses (cold, distant, avoidant)
-    const GHOST_RESPONSES = [
-        "oh. okay.",
-        "👍",
-        "sorry, been busy.",
-        "i don't know what to say anymore.",
-        "...",
-        "seen",
-        "maybe we need a break.",
-        "i'm not in the right headspace.",
-        "👻",
-        "i'll text later (ghosts)"
-    ];
-    
-    // Special keyword responses (if user says something specific) 
-    // You can add custom triggers! Format: { keyword: "text", response: "custom reply", phase: "warm" or "ghost" }
-    const SPECIAL_KEYWORDS = [
-        { keyword: "ghost", response: "please don't say that... it's happening, isn't it?", phase: "warm" },
-        { keyword: "ghost", response: "see? you noticed. i'm fading. i'm sorry.", phase: "ghost" },
-        { keyword: "sorry", response: "it's not your fault. maybe i'm just broken.", phase: "ghost" },
-        { keyword: "miss you", response: "i miss the old us too... but something changed.", phase: "ghost" },
-        { keyword: "hello", response: "hey... nice to hear from you again 💫", phase: "warm" },
-        { keyword: "leave", response: "everyone leaves eventually. maybe it's my turn.", phase: "ghost" }
-    ];
-    
-    // ---------- ADVANCED: you can also edit ghost intensity messages ----------
-    // --------------------------------------------------------------
-    
-    // STATE
-    let messageCount = 0;
-    let ghostActive = false;
-    let ghostIntensity = 0;
-    
-    // DOM elements
-    const msgContainer = document.getElementById('messagesContainer');
-    const messageInput = document.getElementById('messageInput');
-    const sendBtn = document.getElementById('sendMsgBtn');
-    const zoomBtn = document.getElementById('zoomToggle');
-    const wobbleBtn = document.getElementById('wobbleToggle');
-    const commentaryDiv = document.getElementById('commentaryBox');
-    const resetBtn = document.getElementById('resetStoryBtn');
-    const editGuideBtn = document.getElementById('openEditGuide');
-    
-    // UI toggles
-    let zoomIndex = 1;
-    const zoomLevels = ['zoom-small', 'zoom-normal', 'zoom-large', 'zoom-xlarge'];
-    let wobbleEnabled = false;
-    let currentColor = '#dbdee1';
-    
-    // helper: commentary update
-    function setCommentary(msg, isImportant = false) {
-        commentaryDiv.innerHTML = `💬 ${msg}`;
-        if (isImportant) commentaryDiv.style.background = "#2c2b33";
-        else commentaryDiv.style.background = "#232428";
-    }
-    
-    function escapeHtml(str) {
-        return str.replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
-        });
-    }
-    
-    // Add message (system, user, starlight)
-    function addMessage(username, text, isSystem = false, isGhostly = false, customTime = null) {
-        const div = document.createElement('div');
-        div.className = 'message';
-        if (isSystem) div.classList.add('system');
-        const time = customTime || new Date().toLocaleTimeString([], { hour: '2-digit', minute:'2-digit' });
-        if (isSystem) {
-            div.innerHTML = `<div class="message-text" style="color:#b9bbbe; text-align:center;">✦ ${escapeHtml(text)} — ${time}</div>`;
-        } else {
-            const avatarIcon = username === 'You' ? '🐱' : '🌙';
-            const avatarBg = username === 'You' ? '#4e5058' : '#9b59b6';
-            div.innerHTML = `
-                <div class="message-row">
-                    <div class="avatar" style="background: ${avatarBg};">${avatarIcon}</div>
-                    <div class="message-content">
-                        <div class="message-header">
-                            <span class="username">${escapeHtml(username)}</span>
-                            <span class="timestamp">${time}</span>
-                        </div>
-                        <div class="message-text" style="color: ${currentColor};">${escapeHtml(text)}</div>
-                    </div>
-                </div>
-            `;
-        }
-        msgContainer.appendChild(div);
-        if (isGhostly && !isSystem) div.classList.add('ghost-effect');
-        msgContainer.scrollTop = msgContainer.scrollHeight;
-        return div;
-    }
-    
-    // CUSTOM AI RESPONSE PARSER (with keyword detection)
-    function getAIResponse(userMsg, isGhostMode) {
-        const lowerMsg = userMsg.toLowerCase();
-        // check special keywords first
-        for (let spec of SPECIAL_KEYWORDS) {
-            if (lowerMsg.includes(spec.keyword)) {
-                // match phase (warm or ghost) accordingly
-                if ((spec.phase === "warm" && !isGhostMode) || (spec.phase === "ghost" && isGhostMode)) {
-                    return spec.response;
-                }
-                // fallback but still might use 
-                if (spec.phase === "warm" && !isGhostMode) return spec.response;
-                if (spec.phase === "ghost" && isGhostMode) return spec.response;
-            }
-        }
-        // default response by phase
-        if (!isGhostMode) {
-            // warm phase
-            return WARM_RESPONSES[Math.floor(Math.random() * WARM_RESPONSES.length)];
-        } else {
-            // ghost phase with intensity flavor
-            let ghostPool = [...GHOST_RESPONSES];
-            if (ghostIntensity > 5) ghostPool.push("(left on read)", "💀 silence...", "user is offline for 3 days");
-            return ghostPool[Math.floor(Math.random() * ghostPool.length)];
-        }
-    }
-    
-    // Process user message -> update ghost triggers and AI answer
-    function onUserMessage(rawMsg) {
-        if (!rawMsg.trim()) return;
-        const userText = rawMsg.trim();
-        addMessage("You", userText);
-        messageCount++;
-        
-        setCommentary(`Message #${messageCount}: ${ghostActive ? '👻 ghost mode active' : '💗 still warm phase'}`);
-        
-        // ---- ghost activation logic (edit threshold here if needed) ----
-        if (!ghostActive && (messageCount >= 3 || userText.toLowerCase().includes('ghost') || userText.toLowerCase().includes('leave') || userText.toLowerCase().includes('alone'))) {
-            ghostActive = true;
-            addMessage(null, "💀 Something shifted — the replies turn cold. Ghosting begins...", true);
-            setCommentary("⚠️ GHOSTING TRIGGERED! Now AI will give distant, cold replies. (You can edit responses in the WARM_RESPONSES / GHOST_RESPONSES arrays)", true);
-            setTimeout(() => {
-                addMessage("☁️ starlight", "hey... sorry i've been distant. i don't know what's wrong with me.", false, true);
-            }, 400);
-        }
-        
-        // AI response delay
-        setTimeout(() => {
-            if (ghostActive) ghostIntensity = Math.min(ghostIntensity + 0.4, 12);
-            const aiReply = getAIResponse(userText, ghostActive);
-            addMessage("☁️ starlight", aiReply, false, ghostActive);
-            
-            // extra ghost ambiance
-            if (ghostActive && ghostIntensity > 5 && Math.random() < 0.3) {
-                addMessage(null, "⏳ last online: ages ago. The silence screams.", true);
-            }
-            if (ghostActive && ghostIntensity > 8 && !document.querySelector('.final-void')) {
-                addMessage(null, "👻 They've become a ghost. Your words echo in an empty server.", true);
-                document.querySelectorAll('.message').forEach(msg => {
-                    if (msg.innerHTML.includes('☁️ starlight')) msg.classList.add('ghost-effect');
-                });
-            }
-        }, 480);
-    }
-    
-    // ---- INITIAL STORY (default narrative) ----
-    function initDefaultStory() {
-        msgContainer.innerHTML = '';
-        messageCount = 0;
-        ghostActive = false;
-        ghostIntensity = 0;
-        addMessage("☁️ starlight", "hey! i'm so happy we met. you seem like a real one ✨", false, false, "7:21 PM");
-        addMessage("You", "aww thank you! i feel the same way, you're so easy to talk to 💫", false, false, "7:23 PM");
-        addMessage("☁️ starlight", "i've been ghosted before... it hurts. promise you won't disappear?", false, false, "7:26 PM");
-        addMessage("You", "i promise. i'll always be here for you. 🌸", false, false, "7:28 PM");
-        addMessage(null, "💬 The fragile glow of a new connection. But ghosts hide in the wires...", true, false, "7:30 PM");
-        addMessage(null, "✨ Type anything — after 3 messages, the AI will start fading. You can edit the AI responses in the script!", true, false);
-        setCommentary("Ready. Send a few messages. Ghosting triggers around 3 replies. Customize AI replies using WARM_RESPONSES & GHOST_RESPONSES arrays.");
-    }
-    
-    function resetGame() {
-        initDefaultStory();
-        setCommentary("🔄 Story reset. You have another chance. Ghosting can be delayed — see the arrays to change responses.");
-    }
-    
-    // Show guide on how to edit AI responses (simple alert + console)
-    function showEditGuide() {
-        const guideMsg = `✏️ HOW TO EDIT AI RESPONSES:
-        
-1. Open the HTML file in any text editor.
-2. Look for the sections:
-   - "WARM_RESPONSES" : array for kind replies BEFORE ghosting.
-   - "GHOST_RESPONSES" : array for cold, ghosting replies.
-   - "SPECIAL_KEYWORDS" : add custom keywords like { keyword: "love", response: "i love you too", phase: "warm" }
 
-3. Save file and refresh browser. Changes apply instantly!
+/* ===== CHARACTER ===== */
+let character={
+name:"☁️ starlight",
+avatar:"🌙",
+mood:0,
+attachment:5,
+instability:0
+};
 
-Example: add "🌸 you're my sunshine" to WARM_RESPONSES.
-        `;
-        alert(guideMsg);
-        setCommentary("📘 Edit the arrays in the <script> section: WARM_RESPONSES / GHOST_RESPONSES / SPECIAL_KEYWORDS", true);
-    }
-    
-    // ---- UI Toggles ----
-    function applyZoom() {
-        msgContainer.classList.remove(...zoomLevels);
-        msgContainer.classList.add(zoomLevels[zoomIndex]);
-        const names = ['Small', 'Normal', 'Large', 'XLarge'];
-        zoomBtn.innerText = `🔍 ${names[zoomIndex]}`;
-    }
-    function cycleZoom() { zoomIndex = (zoomIndex + 1) % 4; applyZoom(); }
-    
-    function toggleWobble() {
-        wobbleEnabled = !wobbleEnabled;
-        if (wobbleEnabled) {
-            msgContainer.classList.add('wobbly-text');
-            wobbleBtn.innerText = '🌀 On';
-        } else {
-            msgContainer.classList.remove('wobbly-text');
-            wobbleBtn.innerText = '🌀 Off';
-        }
-        setCommentary(`Wobble ${wobbleEnabled ? 'active — words tremble' : 'disabled'}`);
-    }
-    
-    function setColor(color) {
-        currentColor = color;
-        document.querySelectorAll('.message-text').forEach(el => {
-            if (!el.closest('.system')) el.style.color = color;
-        });
-        setCommentary(`🎨 text color changed — mood shifts.`);
-    }
-    
-    // Event Listeners
-    sendBtn.addEventListener('click', () => {
-        const val = messageInput.value;
-        if (val.trim()) { onUserMessage(val); messageInput.value = ''; }
-    });
-    messageInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            const val = messageInput.value;
-            if (val.trim()) { onUserMessage(val); messageInput.value = ''; }
-        }
-    });
-    zoomBtn.addEventListener('click', cycleZoom);
-    wobbleBtn.addEventListener('click', toggleWobble);
-    resetBtn.addEventListener('click', resetGame);
-    editGuideBtn.addEventListener('click', showEditGuide);
-    
-    // color dots
-    const dots = document.querySelectorAll('.color-dot');
-    dots.forEach(dot => {
-        dot.addEventListener('click', () => {
-            dots.forEach(d => d.classList.remove('active'));
-            dot.classList.add('active');
-            let col = dot.getAttribute('data-color');
-            if (col === 'default') col = '#dbdee1';
-            setColor(col);
-        });
-    });
-    document.querySelector('.color-dot[data-color="default"]').classList.add('active');
-    
-    // optional channel flavor (just ambiance)
-    document.querySelectorAll('.channel-item[data-channel]').forEach(ch => {
-        ch.addEventListener('click', () => {
-            document.querySelectorAll('.channel-item').forEach(c => c.classList.remove('active'));
-            ch.classList.add('active');
-            if(ch.getAttribute('data-channel') === 'echoes') {
-                addMessage(null, "📜 echoes of messages: 'i'll never ghost' — but they're gone", true);
-            }
-        });
-    });
-    
-    // start experience
-    initDefaultStory();
-    
-    // console friendly note
-    console.log("✨ Discord Ghosting Simulator | To edit AI replies, modify WARM_RESPONSES, GHOST_RESPONSES, SPECIAL_KEYWORDS arrays in the script.");
+/* ===== PROFILE EDIT ===== */
+updateProfileBtn.onclick=()=>{
+let n=nameInput.value;
+let a=avatarInput.value;
+if(n) character.name=n;
+if(a){
+character.avatar=a;
+avatarPreview.src=a;
+}
+};
+
+/* ===== MESSAGE ===== */
+function addMessage(user,text){
+let div=document.createElement('div');
+div.className="message";
+
+let avatar=user==="You"?"🐱":character.avatar;
+
+div.innerHTML=`
+<div class="message-row">
+<div class="avatar">${avatar}</div>
+<div>
+<b>${user==="You"?"You":character.name}</b>
+<div class="message-text">${text}</div>
+</div>
+</div>`;
+
+messagesContainer.appendChild(div);
+messagesContainer.scrollTop=99999;
+}
+
+/* ===== ANALYSIS ===== */
+function analyze(t){
+t=t.toLowerCase();
+
+if(t.includes("love")) character.attachment++;
+if(t.includes("leave")) character.mood--;
+if(t.includes("why")) character.instability+=1;
+
+character.instability+=0.3;
+}
+
+/* ===== SCENES ===== */
+function openScene(id){
+document.getElementById(id).classList.add('active');
+}
+function closeScene(){
+document.querySelectorAll('.scene-overlay')
+.forEach(s=>s.classList.remove('active'));
+}
+
+/* ===== AI ===== */
+function aiResponse(msg){
+
+// glitch
+if(character.instability>5)
+document.body.classList.add("glitch");
+
+// memory
+if(character.instability>8 && Math.random()<0.5){
+openScene("memoryScene");
+memoryText.innerText="you said you'd stay...";
+}
+
+// void
+if(character.instability>12){
+openScene("voidScene");
+}
+
+// gaslight
+if(character.instability>6 && Math.random()<0.4){
+return "you already said that.";
+}
+
+// identity break
+if(character.instability>10){
+character.name="???";
+}
+
+// normal states
+if(character.mood>2) return "i like you...";
+if(character.mood<-2) return "you're distant.";
+
+if(character.attachment>7) return "don't leave.";
+
+return "i'm here.";
+}
+
+/* ===== SEND ===== */
+function send(){
+let text=messageInput.value.trim();
+if(!text)return;
+
+addMessage("You",text);
+analyze(text);
+
+setTimeout(()=>{
+let r=aiResponse(text);
+addMessage(character.name,r);
+},400);
+
+messageInput.value="";
+}
+
+sendBtn.onclick=send;
+
+messageInput.addEventListener("keypress",e=>{
+if(e.key==="Enter") send();
+});
+
 </script>
 </body>
 </html>
+```
