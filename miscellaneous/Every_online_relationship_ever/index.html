@@ -6,8 +6,7 @@
     <title>Ghosted · A Digital Haunting</title>
     <style>
         /* ================================================================
-           FULLY RESPONSIVE DISCORD-STYLE CSS
-           Mobile-first, adapts to phones, tablets, and desktops
+           FULLY RESPONSIVE DISCORD-STYLE CSS + PROFILE UI + VISUAL DECAY
         ================================================================ */
         * {
             margin: 0;
@@ -26,7 +25,6 @@
             padding: 8px;
         }
 
-        /* Main app container - fluid width */
         .app-container {
             width: 100%;
             max-width: 1400px;
@@ -40,7 +38,7 @@
             flex-direction: row;
         }
 
-        /* ========= LEFT SIDEBAR (SERVERS) ========= */
+        /* ========= LEFT SIDEBAR ========= */
         .sidebar-server {
             width: 68px;
             background: #111214;
@@ -67,6 +65,7 @@
             font-weight: bold;
             font-size: 1.2rem;
             color: #dbdee1;
+            text-decoration: none;
         }
 
         .server-icon.active {
@@ -112,7 +111,7 @@
             color: white;
         }
 
-        /* ========= MAIN CHAT AREA ========= */
+        /* ========= MAIN CHAT AREA with dynamic decay classes ========= */
         .chat-main {
             flex: 1;
             display: flex;
@@ -120,6 +119,41 @@
             background: #313338;
             overflow: hidden;
             min-width: 0;
+            transition: background 0.4s ease, filter 0.3s ease;
+        }
+
+        /* DECAY STAGES — grimy/sad visual effects applied to chat-main */
+        .chat-main.decay-stage1 {
+            background: #2a2b30;
+        }
+        .chat-main.decay-stage2 {
+            background: #222328;
+            filter: contrast(0.95) brightness(0.92);
+        }
+        .chat-main.decay-stage3 {
+            background: #1a1b1f;
+            filter: contrast(0.9) brightness(0.88) grayscale(0.1);
+        }
+        .chat-main.decay-stage4 {
+            background: #111217;
+            filter: contrast(0.85) brightness(0.8) grayscale(0.2) sepia(0.05);
+        }
+
+        /* Optional grain overlay (pseudo-element for grime) */
+        .chat-main.decay-stage3::before,
+        .chat-main.decay-stage4::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="1" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noise)" opacity="0.04"/></svg>');
+            background-repeat: repeat;
+            opacity: 0.25;
+            z-index: 0;
+            border-radius: inherit;
         }
 
         .chat-header {
@@ -131,6 +165,72 @@
             align-items: center;
             justify-content: space-between;
             gap: 8px;
+            z-index: 2;
+            position: relative;
+        }
+
+        /* Profile UI (Discord-like) */
+        .profile-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #232428;
+            padding: 6px 12px 6px 8px;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+        .profile-area:hover {
+            background: #2c2f34;
+        }
+        .profile-avatar {
+            position: relative;
+            width: 36px;
+            height: 36px;
+        }
+        .profile-avatar-img {
+            width: 100%;
+            height: 100%;
+            background: #9b59b6;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: filter 0.3s, opacity 0.3s;
+        }
+        .status-dot {
+            position: absolute;
+            bottom: 0px;
+            right: 0px;
+            width: 11px;
+            height: 11px;
+            background: #23a55a;
+            border-radius: 50%;
+            border: 2px solid #232428;
+            transition: background 0.2s;
+        }
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .profile-name {
+            font-weight: 600;
+            color: white;
+            font-size: 14px;
+            line-height: 1.2;
+        }
+        .profile-badge {
+            font-size: 10px;
+            color: #b5bac1;
+        }
+        .profile-about {
+            font-size: 10px;
+            color: #a5a9b0;
+            max-width: 140px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .channel-info {
@@ -165,31 +265,24 @@
             white-space: nowrap;
         }
 
-        .ctrl-btn:hover {
-            background: #5865f2;
-        }
-
         .color-palette {
             display: flex;
             gap: 6px;
             margin-left: 4px;
         }
-
         .color-dot {
             width: 24px;
             height: 24px;
             border-radius: 50%;
             cursor: pointer;
             border: 2px solid transparent;
-            transition: 0.1s;
         }
-
         .color-dot.active {
             border-color: white;
             transform: scale(1.1);
         }
 
-        /* Messages container */
+        /* messages container */
         .messages-container {
             flex: 1;
             overflow-y: auto;
@@ -197,13 +290,13 @@
             display: flex;
             flex-direction: column;
             gap: 14px;
+            position: relative;
+            z-index: 1;
         }
 
-        /* Message styling */
         .message {
             animation: fadeIn 0.2s ease;
         }
-
         .message.system {
             text-align: center;
             font-style: italic;
@@ -211,12 +304,10 @@
             color: #a5a9b0;
             margin: 6px 0;
         }
-
         .message-row {
             display: flex;
             gap: 10px;
         }
-
         .avatar {
             width: 38px;
             height: 38px;
@@ -228,24 +319,21 @@
             font-weight: bold;
             font-size: 15px;
             flex-shrink: 0;
+            transition: filter 0.3s, opacity 0.3s;
         }
-
         .message-content {
             flex: 1;
         }
-
         .username {
             font-weight: 600;
             color: white;
             font-size: 14px;
         }
-
         .timestamp {
             font-size: 10px;
             color: #8e9297;
             margin-left: 8px;
         }
-
         .message-text {
             color: #dbdee1;
             font-size: 15px;
@@ -254,12 +342,11 @@
             transition: all 0.2s;
         }
 
-        /* WOBBLE ANIMATION */
+        /* WOBBLE */
         .wobbly-text .message-text {
             display: inline-block;
             animation: wobbleAnim 0.35s infinite ease;
         }
-
         @keyframes wobbleAnim {
             0% { transform: translate(0,0) rotate(0deg);}
             25% { transform: translate(1px, -0.8px) rotate(0.5deg);}
@@ -267,19 +354,18 @@
             100% { transform: translate(0,0);}
         }
 
-        /* ZOOM LEVELS */
         .zoom-small .message-text { font-size: 11px; }
         .zoom-normal .message-text { font-size: 14px; }
         .zoom-large .message-text { font-size: 18px; }
         .zoom-xlarge .message-text { font-size: 24px; }
 
-        /* Input area */
         .chat-input-area {
             background: #2b2d31;
             padding: 10px 12px;
             border-top: 1px solid #1e1f22;
+            z-index: 2;
+            position: relative;
         }
-
         .input-wrapper {
             background: #383a40;
             border-radius: 28px;
@@ -288,7 +374,6 @@
             padding: 6px 14px;
             gap: 8px;
         }
-
         #messageInput {
             flex: 1;
             background: transparent;
@@ -298,11 +383,6 @@
             outline: none;
             font-family: inherit;
         }
-
-        #messageInput::placeholder {
-            color: #8e9297;
-        }
-
         .send-btn {
             background: #5865f2;
             border: none;
@@ -313,7 +393,6 @@
             cursor: pointer;
             font-size: 13px;
         }
-
         .commentary-panel {
             font-size: 10px;
             background: #232428;
@@ -323,80 +402,92 @@
             color: #b5bac1;
             text-align: center;
         }
-
         .ghost-effect {
             opacity: 0.5;
-            filter: blur(0.6px);
+            filter: blur(0.8px);
             transition: 0.2s;
         }
-
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(6px);}
             to { opacity: 1; transform: translateY(0);}
         }
 
-        /* ========= RESPONSIVE BREAKPOINTS ========= */
+        /* Profile drawer (modal-like) */
+        .profile-drawer {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 320px;
+            max-width: 85vw;
+            height: 100%;
+            background: #1e1f2c;
+            box-shadow: -4px 0 20px rgba(0,0,0,0.5);
+            z-index: 1000;
+            transition: right 0.2s ease;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            border-left: 1px solid #2b2d3a;
+        }
+        .profile-drawer.open {
+            right: 0;
+        }
+        .drawer-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            align-self: flex-end;
+        }
+        .drawer-avatar {
+            width: 80px;
+            height: 80px;
+            background: #9b59b6;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            margin: 0 auto;
+        }
+        .drawer-name {
+            text-align: center;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .drawer-bio {
+            background: #2b2d31;
+            padding: 12px;
+            border-radius: 12px;
+            color: #b5bac1;
+            font-size: 13px;
+        }
+
         @media (max-width: 700px) {
-            .channel-sidebar {
-                width: 160px;
-            }
-            .sidebar-server {
-                width: 56px;
-            }
-            .server-icon {
-                width: 38px;
-                height: 38px;
-                font-size: 1rem;
-            }
-            .controls-group {
-                padding: 2px 8px;
-            }
-            .ctrl-btn {
-                padding: 3px 8px;
-                font-size: 10px;
-            }
-            .color-dot {
-                width: 20px;
-                height: 20px;
-            }
+            .channel-sidebar { width: 160px; }
+            .sidebar-server { width: 56px; }
+            .server-icon { width: 38px; height: 38px; font-size: 1rem; }
+            .profile-area .profile-info .profile-about { display: none; }
+            .profile-area { padding: 4px 8px; }
         }
-
         @media (max-width: 550px) {
-            .channel-sidebar {
-                display: none;
-            }
-            .sidebar-server {
-                width: 48px;
-            }
-            .chat-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
+            .channel-sidebar { display: none; }
+            .sidebar-server { width: 48px; }
+            .chat-header { flex-direction: column; align-items: flex-start; }
         }
-
-        /* HIDDEN DEV INSTRUCTIONS - only visible in console or via special key, not in UI */
-        .dev-only {
-            display: none;
-        }
-
-        ::-webkit-scrollbar {
-            width: 4px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #1e1f22;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #5865f2;
-            border-radius: 10px;
-        }
+        .dev-only { display: none; }
+        ::-webkit-scrollbar { width: 4px; }
     </style>
 </head>
 <body>
 <div class="app-container">
     <div class="sidebar-server">
         <div class="server-icon active">💔</div>
-        <a href="https://brainchocomagus.space/"><div class="server-icon">🌙</div></a>
-        <a href="https://brainchocomagus.space/GhostThoughts/GhostThoughtv1.html"><div class="server-icon">👻</div></a>
+        <a href="https://brainchocomagus.space/" class="server-icon">🌙</a>
+        <a href="https://brainchocomagus.space/GhostThoughts/GhostThoughtv1.html" class="server-icon">👻</a>
     </div>
 
     <div class="channel-sidebar">
@@ -407,19 +498,30 @@
         <div class="channel-item" id="resetStoryBtn">🔄 reset story</div>
     </div>
 
-    <div class="chat-main">
+    <div class="chat-main" id="chatMain">
         <div class="chat-header">
             <div class="channel-info">
                 <span># 💬 ghost-diaries · </span><span style="font-size:12px;">the ghosting simulation</span>
             </div>
-            <div class="controls-group">
-                <button class="ctrl-btn" id="zoomToggle">🔍 Zoom</button>
-                <!--<button class="ctrl-btn" id="wobbleToggle">🌀 Wobble</button>-->
-                <div class="color-palette" id="colorPalette">
-                    <div class="color-dot" style="background:#dbdee1" data-color="default"></div>
-                    <div class="color-dot" style="background:#f5a97f" data-color="#f5a97f"></div>
-                    <div class="color-dot" style="background:#eb6f9e" data-color="#eb6f9e"></div>
-                    <div class="color-dot" style="background:#8aadf4" data-color="#8aadf4"></div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <div class="profile-area" id="profileTrigger">
+                    <div class="profile-avatar">
+                        <div class="profile-avatar-img" id="partnerAvatar">🌙</div>
+                        <div class="status-dot" id="statusDot"></div>
+                    </div>
+                    <div class="profile-info">
+                        <div class="profile-name" id="profileName">starlight</div>
+                        <div class="profile-about" id="profileAbout">i love late night talks ✨</div>
+                    </div>
+                </div>
+                <div class="controls-group">
+                    <button class="ctrl-btn" id="zoomToggle">🔍 Zoom</button>
+                    <div class="color-palette" id="colorPalette">
+                        <div class="color-dot" style="background:#dbdee1" data-color="default"></div>
+                        <div class="color-dot" style="background:#f5a97f" data-color="#f5a97f"></div>
+                        <div class="color-dot" style="background:#eb6f9e" data-color="#eb6f9e"></div>
+                        <div class="color-dot" style="background:#8aadf4" data-color="#8aadf4"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -431,51 +533,22 @@
                 <input type="text" id="messageInput" placeholder="Type something... (ghosting activates soon)">
                 <button class="send-btn" id="sendMsgBtn">Send</button>
             </div>
-            <div class="commentary-panel" id="commentaryBox">
-                💡 Tip: Zoom, Wobble & Color work on any device. AI becomes distant after ~3 messages.
-            </div>
+            <div class="commentary-panel" id="commentaryBox">💡 Tip: Zoom & Color work. Ghosting triggers after ~10 messages or keywords.</div>
         </div>
     </div>
 </div>
 
-<!-- Hidden dev panel (invisible, but instructions are logged + accessible via console) -->
-<div class="dev-only" id="devInstructionsPanel" style="display:none;">
-    <!-- This area is hidden but holds developer notes that only you can see by inspecting or via console -->
-    <pre id="hiddenDevText">
-    ================================================================
-    ✏️ DEVELOPER INSTRUCTIONS - HOW TO EDIT AI RESPONSES
-    ================================================================
-    
-    You are the only one who sees this. To customize the AI behavior:
-    
-    1. Open your browser's Developer Tools (F12) and go to the Console tab.
-    2. Type: window.__EDIT_AI_RESPONSES__ and press Enter.
-       You'll see the current response arrays.
-    
-    3. Alternatively, edit the JavaScript file (or this HTML's JS section) and modify:
-       - warmResponses: kind replies before ghosting
-       - ghostResponses: cold replies during ghosting
-       - specialKeywords: custom trigger words
-    
-    =========== QUICK EDIT EXAMPLE ===========
-    window.warmResponses.push("💖 You mean the world to me!");
-    window.ghostResponses.push("...seen");
-    
-    Or edit the "AI_CONFIG" object directly in the JS source.
-    
-    The AI responses are stored in the global window.__AI_CONFIG__
-    </pre>
+<!-- Profile Drawer -->
+<div id="profileDrawer" class="profile-drawer">
+    <button class="drawer-close" id="closeDrawer">✕</button>
+    <div class="drawer-avatar" id="drawerAvatar">🌙</div>
+    <div class="drawer-name" id="drawerName">starlight</div>
+    <div class="drawer-bio" id="drawerBio">💫 passionate about stars and staying close</div>
+    <div id="drawerStatusText" style="color:#b5bac1; font-size:12px; text-align:center;">🟢 Online</div>
 </div>
 
 <script>
-    // ================================================================
-    //  FULLY CUSTOMIZABLE AI RESPONSES - EDIT THESE ARRAYS
-    //  Only you (the developer) can see these instructions.
-    //  To modify the AI personality, change the strings below.
-    // ================================================================
-    
-    // ---------- ✏️  EDIT THESE RESPONSES TO CHANGE THE AI BEHAVIOR ----------
-    // Warm phase responses (before ghosting)
+    // ---------- AI CONFIG ----------
     const warmResponses = [
         "💕 i love talking to you. you just get me, y'know?",
         "🌙 i was waiting for your message... it's the highlight of my day.",
@@ -488,8 +561,6 @@
         "you make me smile",
         "I love you so much",
     ];
-    
-    // Ghosting phase responses (cold, distant, avoidant)
     const ghostResponses = [
         "oh. okay.",
         "👍",
@@ -507,76 +578,53 @@
         "Lol",
         "We spoke for hours, I gave you so much priority already"
     ];
-    
-    // Special keyword responses (custom triggers)
-    // Each object: { keyword: string, response: string, phase: "warm" or "ghost" }
     const specialKeywords = [
         { keyword: "ghost", response: "please don't say that... it's happening, isn't it?", phase: "warm" },
         { keyword: "ghost", response: "see? you noticed. i'm fading. i'm sorry.", phase: "ghost" },
         { keyword: "sorry", response: "it's not your fault. maybe i'm just broken.", phase: "ghost" },
         { keyword: "miss you", response: "i miss the old us too... but something changed.", phase: "ghost" },
         { keyword: "hello", response: "hey... nice to hear from you again 💫", phase: "warm" },
-        { keyword: "hello", response: "hello lululululu", phase: "warm" },
         { keyword: "leave", response: "everyone leaves eventually. maybe it's my turn.", phase: "ghost" },
         { keyword: "love", response: "i think i'm falling for you... and that scares me.", phase: "warm" },
         { keyword: "love", response: "I am yours", phase: "warm" },
-        { keyword: "love", response: "i used to feel that way. now i don't know anymore.", phase: "ghost" }
+        { keyword: "love", response: "i used to feel that way. now i don't know anymore.", phase: "ghost" },
         { keyword: "love", response: "I dont think we can be really together.", phase: "ghost" }
     ];
     
-    // ------------- END OF EDITABLE SECTION -------------
-    
-    // Expose config to console for developer editing (hidden from normal users)
-    window.__AI_CONFIG__ = {
-        warmResponses: warmResponses,
-        ghostResponses: ghostResponses,
-        specialKeywords: specialKeywords,
-        editInstructions: "To modify responses, edit warmResponses, ghostResponses, or specialKeywords arrays in the JavaScript code."
-    };
-    
-    // Helper to log dev instructions to console (only visible to you)
-    console.log("%c✨ DEV MODE: AI Response Editor ✨", "color: #5865f2; font-size: 14px; font-weight: bold;");
-    console.log("%cTo customize AI replies, modify the arrays in the JS:", "color: #8e9297;");
-    console.log("  - warmResponses (kind messages before ghosting)");
-    console.log("  - ghostResponses (cold messages after ghosting)");
-    console.log("  - specialKeywords (trigger-based responses)");
-    console.log("%cType window.__AI_CONFIG__ to see current values", "color: #f5a97f;");
-    
-    // ========== GAME STATE ==========
+    // STATE
     let messageCount = 0;
     let ghostActive = false;
     let ghostIntensity = 0;
+    let currentZoomIndex = 1;
+    const zoomLevels = ['zoom-small', 'zoom-normal', 'zoom-large', 'zoom-xlarge'];
+    let currentColor = '#dbdee1';
     
-    // DOM elements
+    // DOM
     const msgContainer = document.getElementById('messagesContainer');
     const messageInput = document.getElementById('messageInput');
     const sendBtn = document.getElementById('sendMsgBtn');
     const zoomBtn = document.getElementById('zoomToggle');
-    const wobbleBtn = document.getElementById('wobbleToggle');
-    const commentaryDiv = document.getElementById('commentaryBox');
     const resetBtn = document.getElementById('resetStoryBtn');
-    
-    // UI toggles state
-    let zoomIndex = 1;
-    const zoomLevels = ['zoom-small', 'zoom-normal', 'zoom-large', 'zoom-xlarge'];
-    //let wobbleEnabled = false;
-    let currentColor = '#dbdee1';
+    const commentaryDiv = document.getElementById('commentaryBox');
+    const chatMain = document.getElementById('chatMain');
+    const profileTrigger = document.getElementById('profileTrigger');
+    const profileDrawer = document.getElementById('profileDrawer');
+    const closeDrawer = document.getElementById('closeDrawer');
+    const partnerAvatarImg = document.getElementById('partnerAvatar');
+    const statusDot = document.getElementById('statusDot');
+    const profileAboutSpan = document.getElementById('profileAbout');
+    const profileNameSpan = document.getElementById('profileName');
+    const drawerAvatar = document.getElementById('drawerAvatar');
+    const drawerName = document.getElementById('drawerName');
+    const drawerBio = document.getElementById('drawerBio');
+    const drawerStatusText = document.getElementById('drawerStatusText');
     
     // Helper functions
     function setCommentary(msg, isImportant = false) {
         commentaryDiv.innerHTML = `💬 ${msg}`;
-        if (isImportant) commentaryDiv.style.background = "#2c2b33";
-        else commentaryDiv.style.background = "#232428";
+        commentaryDiv.style.background = isImportant ? "#2c2b33" : "#232428";
     }
-    
-    function escapeHtml(str) {
-        return str.replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
-        });
-    }
+    function escapeHtml(str) { return str.replace(/[&<>]/g, function(m) { return m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'; }); }
     
     function addMessage(username, text, isSystem = false, isGhostly = false, customTime = null) {
         const div = document.createElement('div');
@@ -588,18 +636,7 @@
         } else {
             const avatarIcon = username === 'You' ? '🐱' : '🌙';
             const avatarBg = username === 'You' ? '#4e5058' : '#9b59b6';
-            div.innerHTML = `
-                <div class="message-row">
-                    <div class="avatar" style="background: ${avatarBg};">${avatarIcon}</div>
-                    <div class="message-content">
-                        <div class="message-header">
-                            <span class="username">${escapeHtml(username)}</span>
-                            <span class="timestamp">${time}</span>
-                        </div>
-                        <div class="message-text" style="color: ${currentColor};">${escapeHtml(text)}</div>
-                    </div>
-                </div>
-            `;
+            div.innerHTML = `<div class="message-row"><div class="avatar" style="background: ${avatarBg};">${avatarIcon}</div><div class="message-content"><div class="message-header"><span class="username">${escapeHtml(username)}</span><span class="timestamp">${time}</span></div><div class="message-text" style="color: ${currentColor};">${escapeHtml(text)}</div></div></div>`;
         }
         msgContainer.appendChild(div);
         if (isGhostly && !isSystem) div.classList.add('ghost-effect');
@@ -607,173 +644,155 @@
         return div;
     }
     
-    // AI response generator with keyword detection
-    function getAIResponse(userMsg, isGhostMode) {
-        const lowerMsg = userMsg.toLowerCase();
-        // Check special keywords
-        for (let spec of specialKeywords) {
-            if (lowerMsg.includes(spec.keyword)) {
-                if ((spec.phase === "warm" && !isGhostMode) || (spec.phase === "ghost" && isGhostMode)) {
-                    return spec.response;
-                }
-            }
+    // UPDATE VISUAL DECAY & PROFILE (grimy + status changes)
+    function updateDecayAndProfile() {
+        // remove existing decay classes
+        chatMain.classList.remove('decay-stage1', 'decay-stage2', 'decay-stage3', 'decay-stage4');
+        if (!ghostActive) {
+            // warm
+            statusDot.style.background = "#23a55a";
+            drawerStatusText.innerText = "🟢 Online";
+            profileAboutSpan.innerText = "i love late night talks ✨";
+            drawerBio.innerText = "💫 passionate about stars and staying close";
+            partnerAvatarImg.style.filter = "none";
+            partnerAvatarImg.style.opacity = "1";
+            return;
         }
-        // Default response by phase
-        if (!isGhostMode) {
-            return warmResponses[Math.floor(Math.random() * warmResponses.length)];
-        } else {
-            let ghostPool = [...ghostResponses];
-            if (ghostIntensity > 5) ghostPool.push("(left on read)", "💀 silence...", "user is offline for 3 days");
-            return ghostPool[Math.floor(Math.random() * ghostPool.length)];
+        // ghost intensity based decay
+        let stage = Math.floor(ghostIntensity / 3); // 0-4 stages
+        if (stage >= 1) {
+            chatMain.classList.add('decay-stage1');
+            statusDot.style.background = "#f0b232";
+            drawerStatusText.innerText = "🟠 Idle";
+            profileAboutSpan.innerText = "been busy...";
+            drawerBio.innerText = "needs some space.";
+        }
+        if (stage >= 2) {
+            chatMain.classList.add('decay-stage2');
+            statusDot.style.background = "#80848e";
+            drawerStatusText.innerText = "⚫ Offline";
+            profileAboutSpan.innerText = "last seen: ages ago";
+            drawerBio.innerText = "this account is inactive";
+            partnerAvatarImg.style.filter = "grayscale(0.3)";
+        }
+        if (stage >= 3) {
+            chatMain.classList.add('decay-stage3');
+            drawerStatusText.innerText = "⚫ Offline · vanished";
+            profileAboutSpan.innerText = "........................................";
+            drawerBio.innerText = "User not accepting messages";
+            partnerAvatarImg.style.filter = "grayscale(0.7) blur(0.5px)";
+        }
+        if (stage >= 4) {
+            chatMain.classList.add('decay-stage4');
+            drawerStatusText.innerText = "💀 Ghosted";
+            profileAboutSpan.innerText = "memories only";
+            drawerBio.innerText = "They faded into silence";
+            partnerAvatarImg.style.filter = "grayscale(1) blur(1px) opacity(0.7)";
+            messageInput.placeholder = "They won't reply...";
         }
     }
     
-    // Process user message
+    function getAIResponse(userMsg, isGhostMode) {
+        const lowerMsg = userMsg.toLowerCase();
+        for (let spec of specialKeywords) {
+            if (lowerMsg.includes(spec.keyword)) {
+                if ((spec.phase === "warm" && !isGhostMode) || (spec.phase === "ghost" && isGhostMode))
+                    return spec.response;
+            }
+        }
+        if (!isGhostMode) return warmResponses[Math.floor(Math.random() * warmResponses.length)];
+        let pool = [...ghostResponses];
+        if (ghostIntensity > 5) pool.push("(left on read)", "💀 silence...", "user is offline for 3 days");
+        return pool[Math.floor(Math.random() * pool.length)];
+    }
+    
     function onUserMessage(rawMsg) {
         if (!rawMsg.trim()) return;
-        const userText = rawMsg.trim();
-        addMessage("You", userText);
+        addMessage("You", rawMsg.trim());
         messageCount++;
+        setCommentary(`Message #${messageCount}: ${ghostActive ? '👻 ghost mode active' : '💗 warm phase'}`);
         
-        setCommentary(`Message #${messageCount}: ${ghostActive ? '👻 ghost mode active' : '💗 still warm phase'}`);
-        
-        // Ghost activation logic
-        if (!ghostActive && (messageCount >= 10 || userText.toLowerCase().includes('ghost') || userText.toLowerCase().includes('leave') || userText.toLowerCase().includes('alone'))) {
+        if (!ghostActive && (messageCount >= 10 || rawMsg.toLowerCase().includes('ghost') || rawMsg.toLowerCase().includes('leave') || rawMsg.toLowerCase().includes('alone'))) {
             ghostActive = true;
             addMessage(null, "💀 Something shifted — the replies turn cold. Ghosting begins...", true);
-            setCommentary("⚠️ GHOSTING TRIGGERED! AI now gives distant replies. (Edit responses in warmResponses/ghostResponses arrays)", true);
-            setTimeout(() => {
-                addMessage("☁️ starlight", "hey... sorry i've been distant. i don't know what's wrong with me.", false, true);
-            }, 400);
+            setCommentary("⚠️ GHOSTING TRIGGERED! UI becomes grimy and profile decays.", true);
+            setTimeout(() => { addMessage("☁️ starlight", "hey... sorry i've been distant. i don't know what's wrong with me.", false, true); }, 400);
+            updateDecayAndProfile();
         }
-        
-        // AI response delay
         setTimeout(() => {
-            if (ghostActive) ghostIntensity = Math.min(ghostIntensity + 0.4, 12);
-            const aiReply = getAIResponse(userText, ghostActive);
+            if (ghostActive) ghostIntensity = Math.min(ghostIntensity + 0.45, 12);
+            const aiReply = getAIResponse(rawMsg, ghostActive);
             addMessage("☁️ starlight", aiReply, false, ghostActive);
-            
-            // Extra ghost ambiance
-            if (ghostActive && ghostIntensity > 5 && Math.random() < 0.3) {
-                addMessage(null, "⏳ last online: ages ago. The silence screams.", true);
-            }
+            if (ghostActive && ghostIntensity > 5 && Math.random() < 0.3) addMessage(null, "⏳ last online: ages ago. The silence screams.", true);
             if (ghostActive && ghostIntensity > 8 && !document.querySelector('.final-void')) {
                 addMessage(null, "👻 They've become a ghost. Your words echo in an empty server.", true);
-                document.querySelectorAll('.message').forEach(msg => {
-                    if (msg.innerHTML.includes('☁️ starlight')) msg.classList.add('ghost-effect');
-                });
+                document.querySelectorAll('.message').forEach(msg => { if (msg.innerHTML.includes('☁️ starlight')) msg.classList.add('ghost-effect'); });
             }
+            updateDecayAndProfile();
         }, 480);
     }
     
-    // Initialize story
     function initDefaultStory() {
         msgContainer.innerHTML = '';
         messageCount = 0;
         ghostActive = false;
         ghostIntensity = 0;
+        updateDecayAndProfile();
         addMessage("☁️ starlight", "hey! i'm so happy we met. you seem like a real one ✨", false, false, "7:21 PM");
         addMessage("You", "aww thank you! i feel the same way, you're so easy to talk to 💫", false, false, "7:23 PM");
         addMessage("☁️ starlight", "i've been ghosted before... it hurts. promise you won't disappear?", false, false, "7:26 PM");
         addMessage("You", "i promise. i'll always be here for you. 🌸", false, false, "7:28 PM");
         addMessage(null, "💬 The fragile glow of a new connection. But ghosts hide in the wires...", true, false, "7:30 PM");
-        //addMessage(null, "✨ Type anything — after 3 messages, the AI will start fading. You can edit the AI responses in the JS arrays!", true, false);
-        //setCommentary("Ready. Send a few messages. Ghosting triggers around 3 replies.");
+        setCommentary("Story reset. Ghosting happens after ~10 messages or keywords like 'ghost'.");
     }
     
-    function resetGame() {
-        initDefaultStory();
-        setCommentary("🔄 Story reset. You have another chance.");
-    }
+    function resetGame() { initDefaultStory(); setCommentary("🔄 Timeline reset. Visuals restored."); }
     
-    // UI Toggle Functions
+    // UI functions
     function applyZoom() {
         msgContainer.classList.remove(...zoomLevels);
-        msgContainer.classList.add(zoomLevels[zoomIndex]);
+        msgContainer.classList.add(zoomLevels[currentZoomIndex]);
         const names = ['Small', 'Normal', 'Large', 'XLarge'];
-        zoomBtn.innerText = `🔍 ${names[zoomIndex]}`;
+        zoomBtn.innerText = `🔍 ${names[currentZoomIndex]}`;
     }
+    function cycleZoom() { currentZoomIndex = (currentZoomIndex + 1) % 4; applyZoom(); }
+    function setColor(color) { currentColor = color; document.querySelectorAll('.message-text').forEach(el => { if (!el.closest('.system')) el.style.color = color; }); setCommentary(`🎨 color changed`); }
     
-    function cycleZoom() { 
-        zoomIndex = (zoomIndex + 1) % 4; 
-        applyZoom(); 
-    }
-    
-    /*function toggleWobble() {
-        wobbleEnabled = !wobbleEnabled;
-        if (wobbleEnabled) {
-            msgContainer.classList.add('wobbly-text');
-            wobbleBtn.innerText = '🌀 On';
-        } else {
-            msgContainer.classList.remove('wobbly-text');
-            wobbleBtn.innerText = '🌀 Off';
-        }
-        setCommentary(`Wobble ${wobbleEnabled ? 'active — words tremble' : 'disabled'}`);
-    }*/
-    
-    function setColor(color) {
-        currentColor = color;
-        document.querySelectorAll('.message-text').forEach(el => {
-            if (!el.closest('.system')) el.style.color = color;
-        });
-        setCommentary(`🎨 text color changed — mood shifts.`);
-    }
+    // Profile Drawer
+    profileTrigger.addEventListener('click', () => { profileDrawer.classList.add('open'); });
+    closeDrawer.addEventListener('click', () => { profileDrawer.classList.remove('open'); });
     
     // Event Listeners
-    sendBtn.addEventListener('click', () => {
-        const val = messageInput.value;
-        if (val.trim()) { onUserMessage(val); messageInput.value = ''; }
-    });
-    
-    messageInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            const val = messageInput.value;
-            if (val.trim()) { onUserMessage(val); messageInput.value = ''; }
-        }
-    });
-    
+    sendBtn.addEventListener('click', () => { let v = messageInput.value; if(v.trim()){ onUserMessage(v); messageInput.value = ''; } });
+    messageInput.addEventListener('keypress', (e) => { if(e.key === 'Enter'){ e.preventDefault(); let v = messageInput.value; if(v.trim()){ onUserMessage(v); messageInput.value = ''; } } });
     zoomBtn.addEventListener('click', cycleZoom);
-    wobbleBtn.addEventListener('click', toggleWobble);
     resetBtn.addEventListener('click', resetGame);
     
-    // Color dots
     const dots = document.querySelectorAll('.color-dot');
-    dots.forEach(dot => {
-        dot.addEventListener('click', () => {
-            dots.forEach(d => d.classList.remove('active'));
-            dot.classList.add('active');
-            let col = dot.getAttribute('data-color');
-            if (col === 'default') col = '#dbdee1';
-            setColor(col);
-        });
-    });
+    dots.forEach(dot => dot.addEventListener('click', () => {
+        dots.forEach(d => d.classList.remove('active'));
+        dot.classList.add('active');
+        let col = dot.getAttribute('data-color');
+        if(col === 'default') col = '#dbdee1';
+        setColor(col);
+    }));
     document.querySelector('.color-dot[data-color="default"]').classList.add('active');
     
-    // Channel ambiance (non-critical)
     document.querySelectorAll('.channel-item[data-channel]').forEach(ch => {
         ch.addEventListener('click', () => {
             document.querySelectorAll('.channel-item').forEach(c => c.classList.remove('active'));
             ch.classList.add('active');
-            if(ch.getAttribute('data-channel') === 'echoes') {
-                addMessage(null, "📜 echoes of messages: 'i'll never ghost' — but they're gone", true);
-            }
+            if(ch.getAttribute('data-channel') === 'echoes') addMessage(null, "📜 echoes: 'i'll never ghost' — but they're gone", true);
         });
     });
     
-    // Start the game
     initDefaultStory();
     
-    // Additional hidden dev helper: press Ctrl+Shift+D to show edit summary in console
     document.addEventListener('keydown', (e) => {
-        if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+        if(e.ctrlKey && e.shiftKey && e.key === 'D') {
             console.clear();
-            console.log("%c🔧 DEV MENU - AI CONFIGURATION", "color: #5865f2; font-size: 16px; font-weight: bold;");
-            console.log("warmResponses:", warmResponses);
-            console.log("ghostResponses:", ghostResponses);
-            console.log("specialKeywords:", specialKeywords);
-            console.log("%cTo edit: modify the arrays at the top of the JS section.", "color: #f5a97f;");
-            setCommentary("🔧 Dev menu opened — check console (F12) to see AI config", true);
+            console.log("warmResponses:", warmResponses, "ghostResponses:", ghostResponses);
+            setCommentary("Dev menu: check console (F12)", true);
         }
     });
 </script>
