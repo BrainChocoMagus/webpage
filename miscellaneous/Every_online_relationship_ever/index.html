@@ -395,14 +395,14 @@
 <div class="app-container">
     <div class="sidebar-server">
         <div class="server-icon active">💔</div>
-        <div class="server-icon">🌙</div>
-        <div class="server-icon">👻</div>
+        <a href="https://brainchocomagus.space/"><div class="server-icon">🌙</div></a>
+        <a href="https://brainchocomagus.space/GhostThoughts/GhostThoughtv1.html"><div class="server-icon">👻</div></a>
     </div>
 
     <div class="channel-sidebar">
         <div class="channel-category">✦ NARRATIVE</div>
-        <div class="channel-item active" data-channel="main"># 💬 ghost-diaries</div>
-        <div class="channel-item" data-channel="echoes"># 📜 echoes</div>
+        <div class="channel-item active" data-channel="main"># 💬 general</div>
+        <div class="channel-item" data-channel="echoes"># 💖 lulu-loves-you</div>
         <div class="channel-category">⚙️ CONTROLS</div>
         <div class="channel-item" id="resetStoryBtn">🔄 reset story</div>
     </div>
@@ -414,7 +414,7 @@
             </div>
             <div class="controls-group">
                 <button class="ctrl-btn" id="zoomToggle">🔍 Zoom</button>
-                <button class="ctrl-btn" id="wobbleToggle">🌀 Wobble</button>
+                <!--<button class="ctrl-btn" id="wobbleToggle">🌀 Wobble</button>-->
                 <div class="color-palette" id="colorPalette">
                     <div class="color-dot" style="background:#dbdee1" data-color="default"></div>
                     <div class="color-dot" style="background:#f5a97f" data-color="#f5a97f"></div>
@@ -484,7 +484,9 @@
         "💖 don't ghost me, okay? that would shatter me.",
         "⭐ you're so different from others online. i'm scared to lose this.",
         "🌟 every notification from you makes me smile.",
-        "💫 i wish we could meet irl someday. you're special."
+        "💫 i wish we could meet irl someday. you're special.",
+        "you make me smile",
+        "I love you so much",
     ];
     
     // Ghosting phase responses (cold, distant, avoidant)
@@ -497,11 +499,13 @@
         "seen",
         "maybe we need a break.",
         "i'm not in the right headspace.",
-        "👻",
+        "       ",
         "i'll text later (ghosts)",
         "k.",
         "👍 cool i guess",
-        "i need some space right now."
+        "i need some space right now.",
+        "Lol",
+        "We spoke for hours, I gave you so much priority already"
     ];
     
     // Special keyword responses (custom triggers)
@@ -512,9 +516,12 @@
         { keyword: "sorry", response: "it's not your fault. maybe i'm just broken.", phase: "ghost" },
         { keyword: "miss you", response: "i miss the old us too... but something changed.", phase: "ghost" },
         { keyword: "hello", response: "hey... nice to hear from you again 💫", phase: "warm" },
+        { keyword: "hello", response: "hello lululululu", phase: "warm" },
         { keyword: "leave", response: "everyone leaves eventually. maybe it's my turn.", phase: "ghost" },
         { keyword: "love", response: "i think i'm falling for you... and that scares me.", phase: "warm" },
+        { keyword: "love", response: "I am yours", phase: "warm" },
         { keyword: "love", response: "i used to feel that way. now i don't know anymore.", phase: "ghost" }
+        { keyword: "love", response: "I dont think we can be really together.", phase: "ghost" }
     ];
     
     // ------------- END OF EDITABLE SECTION -------------
@@ -552,7 +559,7 @@
     // UI toggles state
     let zoomIndex = 1;
     const zoomLevels = ['zoom-small', 'zoom-normal', 'zoom-large', 'zoom-xlarge'];
-    let wobbleEnabled = false;
+    //let wobbleEnabled = false;
     let currentColor = '#dbdee1';
     
     // Helper functions
@@ -631,7 +638,7 @@
         setCommentary(`Message #${messageCount}: ${ghostActive ? '👻 ghost mode active' : '💗 still warm phase'}`);
         
         // Ghost activation logic
-        if (!ghostActive && (messageCount >= 3 || userText.toLowerCase().includes('ghost') || userText.toLowerCase().includes('leave') || userText.toLowerCase().includes('alone'))) {
+        if (!ghostActive && (messageCount >= 10 || userText.toLowerCase().includes('ghost') || userText.toLowerCase().includes('leave') || userText.toLowerCase().includes('alone'))) {
             ghostActive = true;
             addMessage(null, "💀 Something shifted — the replies turn cold. Ghosting begins...", true);
             setCommentary("⚠️ GHOSTING TRIGGERED! AI now gives distant replies. (Edit responses in warmResponses/ghostResponses arrays)", true);
@@ -670,8 +677,8 @@
         addMessage("☁️ starlight", "i've been ghosted before... it hurts. promise you won't disappear?", false, false, "7:26 PM");
         addMessage("You", "i promise. i'll always be here for you. 🌸", false, false, "7:28 PM");
         addMessage(null, "💬 The fragile glow of a new connection. But ghosts hide in the wires...", true, false, "7:30 PM");
-        addMessage(null, "✨ Type anything — after 3 messages, the AI will start fading. You can edit the AI responses in the JS arrays!", true, false);
-        setCommentary("Ready. Send a few messages. Ghosting triggers around 3 replies.");
+        //addMessage(null, "✨ Type anything — after 3 messages, the AI will start fading. You can edit the AI responses in the JS arrays!", true, false);
+        //setCommentary("Ready. Send a few messages. Ghosting triggers around 3 replies.");
     }
     
     function resetGame() {
@@ -692,7 +699,7 @@
         applyZoom(); 
     }
     
-    function toggleWobble() {
+    /*function toggleWobble() {
         wobbleEnabled = !wobbleEnabled;
         if (wobbleEnabled) {
             msgContainer.classList.add('wobbly-text');
@@ -702,7 +709,7 @@
             wobbleBtn.innerText = '🌀 Off';
         }
         setCommentary(`Wobble ${wobbleEnabled ? 'active — words tremble' : 'disabled'}`);
-    }
+    }*/
     
     function setColor(color) {
         currentColor = color;
