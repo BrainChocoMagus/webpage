@@ -1,30 +1,35 @@
 /* ============================================
-   RESET Y VARIABLES
+   1. RESET Y VARIABLES GLOBALES
    ============================================ */
+
+/* Elimina márgenes y paddings por defecto */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
+/* Variables CSS para mantener consistencia en colores y tamaños */
 :root {
-    --bg-primary: #0f0a1a;
-    --bg-secondary: #1a1228;
-    --bg-card: #1e1630;
-    --text-primary: #e6dcff;
-    --text-secondary: #b89cff;
-    --text-muted: #6b5b8a;
-    --border-color: rgba(184, 156, 255, 0.15);
-    --accent: #b89cff;
-    --accent-hover: #d4c4ff;
-    --shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-    --radius: 12px;
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Colores principales (tema oscuro) */
+    --bg-primary: #0f0a1a;      /* Fondo principal */
+    --bg-secondary: #1a1228;    /* Fondo de tarjetas y paneles */
+    --bg-card: #1e1630;         /* Fondo de elementos internos */
+    --text-primary: #e6dcff;    /* Color de texto principal */
+    --text-secondary: #b89cff;  /* Color de texto secundario (acento) */
+    --text-muted: #6b5b8a;      /* Color de texto atenuado */
+    --border-color: rgba(184, 156, 255, 0.15); /* Color de bordes */
+    --accent: #b89cff;          /* Color de acento principal */
+    --accent-hover: #d4c4ff;    /* Color de acento al pasar el mouse */
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.4);  /* Sombra */
+    --radius: 12px;             /* Radio de bordes */
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Transiciones suaves */
 }
 
 /* ============================================
-   ESTILOS BASE
+   2. ESTILOS BASE DEL BODY
    ============================================ */
+
 body {
     background: var(--bg-primary);
     color: var(--text-primary);
@@ -37,8 +42,9 @@ body {
 }
 
 /* ============================================
-   NAVBAR
+   3. BARRA DE NAVEGACIÓN (NAVBAR)
    ============================================ */
+
 .navbar {
     display: flex;
     justify-content: space-between;
@@ -52,12 +58,14 @@ body {
     gap: 1rem;
 }
 
+/* Lado izquierdo de la navbar */
 .nav-left {
     display: flex;
     align-items: center;
     gap: 1.5rem;
 }
 
+/* Enlace "Inicio" */
 .home-link {
     color: var(--text-secondary);
     text-decoration: none;
@@ -71,6 +79,7 @@ body {
     color: var(--accent-hover);
 }
 
+/* Título del sitio */
 .site-title {
     font-size: 1.3rem;
     font-weight: normal;
@@ -78,6 +87,7 @@ body {
     letter-spacing: 0.05em;
 }
 
+/* Lado derecho de la navbar (botones) */
 .nav-right {
     display: flex;
     gap: 0.5rem;
@@ -85,8 +95,9 @@ body {
 }
 
 /* ============================================
-   BOTONES
+   4. BOTONES
    ============================================ */
+
 .btn {
     background: transparent;
     border: 1px solid var(--border-color);
@@ -100,6 +111,7 @@ body {
     white-space: nowrap;
 }
 
+/* Efecto hover en botones */
 .btn:hover {
     background: var(--accent);
     color: var(--bg-primary);
@@ -108,23 +120,15 @@ body {
     box-shadow: 0 4px 15px rgba(184, 156, 255, 0.2);
 }
 
-.btn-outline {
-    background: transparent;
-}
-
-.btn-sm {
-    padding: 0.25rem 0.8rem;
-    font-size: 0.75rem;
-}
-
-.btn-icon {
-    padding: 0.4rem 0.8rem;
-    font-size: 1.1rem;
-}
+/* Variantes de botones */
+.btn-outline { background: transparent; }
+.btn-sm { padding: 0.25rem 0.8rem; font-size: 0.75rem; }
+.btn-icon { padding: 0.4rem 0.8rem; font-size: 1.1rem; }
 
 /* ============================================
-   CONTENEDOR PRINCIPAL
+   5. CONTENEDOR PRINCIPAL
    ============================================ */
+
 .main-container {
     display: flex;
     gap: 2rem;
@@ -133,10 +137,11 @@ body {
 }
 
 /* ============================================
-   SIDEBAR (lista de posts)
+   6. SIDEBAR (Lista de posts)
    ============================================ */
+
 .sidebar {
-    flex: 0 0 320px;
+    flex: 0 0 320px;          /* Ancho fijo */
     background: var(--bg-secondary);
     border-radius: var(--radius);
     border: 1px solid var(--border-color);
@@ -146,12 +151,14 @@ body {
     flex-direction: column;
 }
 
+/* Sección de filtros dentro del sidebar */
 .filter-section {
     margin-bottom: 1rem;
     padding-bottom: 1rem;
     border-bottom: 1px solid var(--border-color);
 }
 
+/* Filtro activo (se muestra cuando hay un filtro aplicado) */
 .active-filter {
     color: var(--accent);
     font-size: 0.85rem;
@@ -168,32 +175,34 @@ body {
     background: rgba(184, 156, 255, 0.15);
 }
 
+/* Contenedor de filtros por fecha */
 .date-filters {
     display: flex;
     gap: 0.3rem;
     flex-wrap: wrap;
 }
 
+/* Lista de posts (scrollable) */
 .post-list {
     flex: 1;
     overflow-y: auto;
     padding-right: 0.3rem;
 }
 
+/* Estilo de la barra de scroll */
 .post-list::-webkit-scrollbar {
     width: 4px;
 }
-
 .post-list::-webkit-scrollbar-track {
     background: var(--bg-primary);
     border-radius: 2px;
 }
-
 .post-list::-webkit-scrollbar-thumb {
     background: var(--text-muted);
     border-radius: 2px;
 }
 
+/* Cada elemento de la lista de posts */
 .post-list div {
     padding: 0.6rem 0.8rem;
     margin-bottom: 0.3rem;
@@ -212,6 +221,7 @@ body {
     color: var(--text-primary);
 }
 
+/* Elemento activo (post seleccionado) */
 .post-list div.active {
     background: rgba(184, 156, 255, 0.08);
     border-left-color: var(--accent);
@@ -219,8 +229,9 @@ body {
 }
 
 /* ============================================
-   CONTENIDO DEL POST
+   7. CONTENIDO DEL POST
    ============================================ */
+
 .content {
     flex: 1;
     background: var(--bg-secondary);
@@ -230,6 +241,7 @@ body {
     min-height: 400px;
 }
 
+/* Título del post */
 .post-content h2 {
     font-size: 1.8rem;
     font-weight: normal;
@@ -238,6 +250,7 @@ body {
     letter-spacing: 0.02em;
 }
 
+/* Metadatos del post (fecha y tags) */
 .post-content .meta {
     color: var(--text-muted);
     font-size: 0.85rem;
@@ -259,6 +272,7 @@ body {
     color: var(--accent-hover);
 }
 
+/* Imagen del post */
 .post-content .post-image {
     max-width: 100%;
     height: auto;
@@ -273,6 +287,7 @@ body {
     opacity: 1;
 }
 
+/* Cuerpo del texto del post */
 .post-content .body {
     line-height: 1.8;
     font-size: 1.05rem;
@@ -282,6 +297,7 @@ body {
     margin-bottom: 1rem;
 }
 
+/* Mensaje de bienvenida (cuando no hay post seleccionado) */
 .welcome-message {
     display: flex;
     align-items: center;
@@ -294,8 +310,9 @@ body {
 }
 
 /* ============================================
-   CONSTELACIÓN DE TAGS
+   8. CONSTELACIÓN DE TAGS
    ============================================ */
+
 .tags-constellation {
     position: fixed;
     bottom: 2rem;
@@ -306,7 +323,7 @@ body {
     border-radius: 50%;
     border: 1px solid var(--border-color);
     box-shadow: var(--shadow);
-    display: none;
+    display: none;          /* Oculto por defecto */
     justify-content: center;
     align-items: center;
     z-index: 1000;
@@ -314,22 +331,19 @@ body {
     transition: var(--transition);
 }
 
+/* Cuando tiene la clase 'active' se muestra */
 .tags-constellation.active {
     display: flex;
     animation: fadeIn 0.3s ease;
 }
 
+/* Animación de entrada */
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: scale(0.9);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
 }
 
+/* Cada tag dentro de la constelación */
 .tag {
     position: absolute;
     color: var(--text-secondary);
@@ -351,14 +365,16 @@ body {
 }
 
 /* ============================================
-   MODO LECTURA
+   9. MODO LECTURA
    ============================================ */
+
+/* Cuando el body tiene la clase 'lectura' */
 body.lectura .sidebar {
-    display: none;
+    display: none;           /* Oculta la lista */
 }
 
 body.lectura .content {
-    max-width: 800px;
+    max-width: 800px;        /* Centra el contenido */
     margin: 0 auto;
     padding: 3rem;
 }
@@ -378,8 +394,9 @@ body.lectura .navbar {
 }
 
 /* ============================================
-   FOOTER
+   10. FOOTER
    ============================================ */
+
 .footer {
     margin-top: 2rem;
     padding: 1rem 0;
@@ -391,11 +408,13 @@ body.lectura .navbar {
 }
 
 /* ============================================
-   RESPONSIVE
+   11. RESPONSIVE (Adaptación a móviles)
    ============================================ */
+
+/* Tablets y pantallas medianas */
 @media (max-width: 900px) {
     .main-container {
-        flex-direction: column;
+        flex-direction: column;  /* Apila los paneles */
     }
 
     .sidebar {
@@ -419,6 +438,7 @@ body.lectura .navbar {
     }
 }
 
+/* Teléfonos móviles */
 @media (max-width: 600px) {
     body {
         padding: 0.8rem;
