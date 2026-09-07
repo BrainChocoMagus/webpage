@@ -1,35 +1,58 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Personal Archive</title>
-    <link href="style.css" rel="stylesheet" type="text/css" media="all">
-    
+    <title>✦ Archivo Personal</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-    <body>
-        <a href="../" class="home-link">☽ Home</a>
-        <h1> Archive </h1>
-        <button id="toggleTags">✦ Constellations</button>
-        <button onclick="mostrarTodos()">✦ All Entries</button>
-        <div id="activeFilter"></div>
-        <div id="dateMenu">
-            <button onclick="filtrarPorFecha('2025')">2025</button>
-            
+<body>
+    <!-- Barra de navegación superior -->
+    <nav class="navbar">
+        <div class="nav-left">
+            <a href="../" class="home-link">⌂ Inicio</a>
+            <h1 class="site-title">✦ Archivo</h1>
         </div>
-        <div id="tags"></div>
-        <div id="list"></div>
-        
-        <hr>
-        <article id="post"></article>
+        <div class="nav-right">
+            <button onclick="mostrarTodos()" class="btn btn-outline">✦ Todos</button>
+            <button id="toggleTags" class="btn btn-outline">✦ Constelaciones</button>
+            <button onclick="modoLectura()" class="btn btn-icon">🕯️</button>
+        </div>
+    </nav>
 
-        <script src="main.js"></script>
+    <!-- Contenido principal -->
+    <div class="main-container">
+        <!-- Panel izquierdo: lista de posts -->
+        <aside class="sidebar">
+            <div class="filter-section">
+                <div id="activeFilter" class="active-filter" style="display:none;"></div>
+                <div class="date-filters">
+                    <button onclick="filtrarPorFecha('2025')" class="btn btn-sm">2025</button>
+                    <button onclick="filtrarPorFecha('2026')" class="btn btn-sm">2026</button>
+                    <button onclick="filtrarPorFecha('2027')" class="btn btn-sm">2027</button>
+                </div>
+            </div>
+            <div id="list" class="post-list"></div>
+        </aside>
 
+        <!-- Panel derecho: contenido del post -->
+        <main class="content">
+            <article id="post" class="post-content">
+                <div class="welcome-message">
+                    <p>✦ selecciona un post para leer ✦</p>
+                </div>
+            </article>
+        </main>
+    </div>
 
-        <button onclick="modoLectura()">🕯️</button>
+    <!-- Constelación de tags (flotante) -->
+    <div id="tags" class="tags-constellation"></div>
 
-    </body>
-    <footer>
-        
+    <!-- Footer -->
+    <footer class="footer">
+        <p>✦ Archivo personal — <span id="postCount">0</span> entradas</p>
     </footer>
+
+    <script src="script.js"></script>
+</body>
 </html>
