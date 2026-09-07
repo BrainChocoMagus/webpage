@@ -31,9 +31,6 @@ const POSTS_DATA = [
         image: null,
         content: "Hojas que caen,\npintando el suelo de oro,\notoño llega.\n\nEl viento juega\ncon los colores del sol,\nmelancolía."
     }
-    // =========================================
-    // AÑADE MÁS POSTS AQUÍ
-    // =========================================
 ];
 
 // =============================================
@@ -42,10 +39,11 @@ const POSTS_DATA = [
 
 const state = {
     posts: [],
+    filteredPosts: [],
     tags: new Set(),
     currentFilter: null,
     currentPost: null,
-    isReadingMode: false   // NUEVO: para rastrear el modo lectura
+    isReadingMode: false
 };
 
 // =============================================
@@ -59,7 +57,8 @@ const DOM = {
     toggleTags: document.getElementById('toggleTags'),
     activeFilter: document.getElementById('activeFilter'),
     postCount: document.getElementById('postCount'),
-    modoLecturaBtn: document.getElementById('modoLecturaBtn')  // NUEVO
+    modoLecturaBtn: document.getElementById('modoLecturaBtn'),
+    searchInput: document.getElementById('searchInput')
 };
 
 // =============================================
@@ -69,9 +68,15 @@ const DOM = {
 function init() {
     console.log('📖 Iniciando Archivo Personal...');
     
+    // Cargar posts
     state.posts = POSTS_DATA.map((p, index) => ({ ...p, id: index }));
-    state.posts.sort((a, b) => new Date(b.date) - new Date(a.date));
+    state.filteredPosts = [...state.posts];
     
+    // Ordenar por fecha
+    state.posts.sort((a, b) => new Date(b.date) - new Date(a.date));
+    state.filteredPosts.sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    // Recolectar tags
     state.posts.forEach(post => {
         post.tags.forEach(tag => {
             state.tags.add(tag.trim().toLowerCase());
@@ -79,39 +84,45 @@ function init() {
     });
     
     console.log(`✅ ${state.posts.length} posts cargados`);
-    console.log(`🏷️ ${state.tags.size} tags encontrados`);
+    console.log(`🏷️ ${state.tags.size} tags encontrados:`, Array.from(state.tags));
     
-    renderList(state.posts);
+    // Renderizar
+    renderList(state.filteredPosts);
     renderTags();
     updatePostCount();
     showWelcome();
 }
 
 // =============================================
-// 5. MODO LECTURA MEJORADO
+// 5. RENDERIZAR LISTA
 // =============================================
 
-function toggleModoLectura() {
-    state.isReadingMode = !state.isReadingMode;
-    document.body.classList.toggle('lectura', state.isReadingMode);
+function renderList(posts) {
+    if (!DOM.list) return;
+    DOM.list.innerHTML = '';
     
-    // Cambiar el texto del botón
-    if (DOM.modoLecturaBtn) {
-        DOM.modoLecturaBtn.textContent = state.isReadingMode ? '✕ Salir Lectura' : '📖 Modo Lectura';
+    if (!posts || posts.length === 0) {
+        DOM.list.innerHTML = '<div style="opacity:0.4; text-align:center; padding:1rem;">✦ sin entradas ✦</div>';
+        return;
     }
     
-    // Si estamos en modo lectura y no hay post seleccionado, mostrar mensaje
-    if (state.isReadingMode && !state.currentPost) {
-        DOM.post.innerHTML = `
-            <div style="text-align:center; padding:2rem; opacity:0.6;">
-                <p>📖 Selecciona un post para leer en modo lectura</p>
-            </div>
-        `;
-    }
+    posts.forEach(post => {
+        const div = document.createElement('div');
+        const date = formatDate(post.date);
+        div.textContent = `${date} — ${post.title}`;
+        div.dataset.id = post.id;
+        
+        if (state.currentPost && state.currentPost.id === post.id) {
+            div.classList.add('active');
+        }
+        
+        div.addEventListener('click', () => showPost(post));
+        DOM.list.appendChild(div);
+    });
 }
 
 // =============================================
-// 6. MOSTRAR POST (ahora con modo lectura automático)
+// 6. MOSTRAR POST
 // =============================================
 
 function showPost(post) {
@@ -144,31 +155,14 @@ function showPost(post) {
     
     DOM.post.innerHTML = html;
     
-    // Si estamos en modo lectura, mantenerlo, si no, activarlo
+    // Activar modo lectura si no está activo
     if (!state.isReadingMode) {
-        toggleModoLectura(); // Activar modo lectura automáticamente al seleccionar un post
-    }
-}
-
-// =============================================
-// 7. MOSTRAR TODOS (con limpieza de modo lectura)
-// =============================================
-
-function mostrarTodos() {
-    clearActiveFilter();
-    state.currentPost = null;
-    
-    // Si estamos en modo lectura, salir
-    if (state.isReadingMode) {
         toggleModoLectura();
     }
-    
-    renderList(state.posts);
-    showWelcome();
 }
 
 // =============================================
-// 8. CONSTELACIÓN DE TAGS (mejorada)
+// 7. CONSTELACIÓN DE TAGS (CORREGIDA)
 // =============================================
 
 function renderTags() {
@@ -180,11 +174,12 @@ function renderTags() {
     DOM.tags.innerHTML = '';
     const tags = Array.from(state.tags);
     
+    // Obtener dimensiones del contenedor
     const rect = DOM.tags.getBoundingClientRect();
-    const size = Math.min(rect.width || 350, rect.height || 350);
+    const size = Math.min(rect.width || 400, rect.height || 400);
     const centerX = size / 2;
     const centerY = size / 2;
-    const radius = Math.min(size * 0.38, 130);
+    const radius = Math.min(size * 0.38, 150);
     const angleStep = (Math.PI * 2) / tags.length;
     
     tags.forEach((tag, i) => {
@@ -192,6 +187,7 @@ function renderTags() {
         el.className = 'tag';
         el.textContent = `#${tag}`;
         
+        // Posición circular con variación
         const angle = angleStep * i - Math.PI / 2;
         const variation = 1 + (Math.random() - 0.5) * 0.15;
         const x = centerX + radius * Math.cos(angle) * variation;
@@ -201,15 +197,18 @@ function renderTags() {
         el.style.top = `${y}px`;
         el.style.transform = 'translate(-50%, -50%)';
         
+        // Tamaño según cantidad de tags
         const baseSize = Math.max(0.7, 1.2 - (tags.length / 30));
         el.style.fontSize = `${baseSize + 0.1}rem`;
         
-        // Colores personalizables
+        // Colores únicos para cada tag
         const hue = 260 + (i * 15) % 60;
         el.style.color = `hsl(${hue}, 70%, 75%)`;
         
+        // AL HACER CLICK - FILTRAR POR TAG (CORREGIDO)
         el.addEventListener('click', (e) => {
             e.stopPropagation();
+            console.log(`🔍 Filtrando por tag: ${tag}`);
             filtrarPorTag(tag);
         });
         
@@ -218,42 +217,118 @@ function renderTags() {
 }
 
 // =============================================
-// 9. FILTROS (sin cambios)
+// 8. FUNCIONES DE FILTRO (CORREGIDAS)
 // =============================================
 
+// Filtrar por tag
 function filtrarPorTag(tag) {
     if (!tag) return;
     const cleanTag = tag.trim().toLowerCase();
+    console.log(`🔍 Filtrando por: ${cleanTag}`);
+    
+    // Buscar posts que tengan este tag
     const filtered = state.posts.filter(p => 
         p.tags.some(t => t.trim().toLowerCase() === cleanTag)
     );
     
+    console.log(`📊 Encontrados ${filtered.length} posts con tag #${cleanTag}`);
+    
+    // Actualizar estado
+    state.filteredPosts = filtered;
     renderList(filtered);
     setActiveFilter(`#${cleanTag}`);
-    DOM.tags.classList.remove('active');
+    DOM.tags.classList.remove('active'); // Cerrar constelación
     
-    DOM.post.innerHTML = `
-        <div style="text-align:center; padding:2rem; opacity:0.6;">
-            <p>✦ posts con <strong style="color:var(--accent);">#${cleanTag}</strong></p>
-            <p style="font-size:0.8rem; margin-top:0.5rem;">${filtered.length} entradas</p>
-        </div>
-    `;
+    // Mostrar mensaje de filtro
+    if (filtered.length > 0) {
+        DOM.post.innerHTML = `
+            <div style="text-align:center; padding:2rem; opacity:0.6;">
+                <p>✦ posts con <strong style="color:var(--accent);">#${cleanTag}</strong></p>
+                <p style="font-size:0.8rem; margin-top:0.5rem;">${filtered.length} entradas</p>
+            </div>
+        `;
+    } else {
+        DOM.post.innerHTML = `
+            <div style="text-align:center; padding:2rem; opacity:0.4;">
+                <p>✦ no hay posts con <strong style="color:var(--accent);">#${cleanTag}</strong></p>
+            </div>
+        `;
+    }
 }
 
+// Filtrar por fecha
 function filtrarPorFecha(yearMonth) {
     if (!yearMonth) return;
     const filtered = state.posts.filter(p => p.date.startsWith(yearMonth));
     const label = yearMonth.length === 4 ? `año ${yearMonth}` : yearMonth;
     
+    state.filteredPosts = filtered;
     renderList(filtered);
     setActiveFilter(label);
     
-    DOM.post.innerHTML = `
-        <div style="text-align:center; padding:2rem; opacity:0.6;">
-            <p>✦ ${label}</p>
-            <p style="font-size:0.8rem; margin-top:0.5rem;">${filtered.length} entradas</p>
-        </div>
-    `;
+    if (filtered.length > 0) {
+        DOM.post.innerHTML = `
+            <div style="text-align:center; padding:2rem; opacity:0.6;">
+                <p>✦ ${label}</p>
+                <p style="font-size:0.8rem; margin-top:0.5rem;">${filtered.length} entradas</p>
+            </div>
+        `;
+    } else {
+        DOM.post.innerHTML = `
+            <div style="text-align:center; padding:2rem; opacity:0.4;">
+                <p>✦ no hay posts para ${label}</p>
+            </div>
+        `;
+    }
+}
+
+// Buscar posts
+function buscarPosts(query) {
+    if (!query || query.trim() === '') {
+        state.filteredPosts = [...state.posts];
+        renderList(state.filteredPosts);
+        if (!state.currentPost) showWelcome();
+        return;
+    }
+    
+    const searchTerm = query.toLowerCase().trim();
+    const filtered = state.posts.filter(p => 
+        p.title.toLowerCase().includes(searchTerm) ||
+        p.content.toLowerCase().includes(searchTerm) ||
+        p.tags.some(t => t.toLowerCase().includes(searchTerm))
+    );
+    
+    state.filteredPosts = filtered;
+    renderList(filtered);
+    
+    if (filtered.length === 0) {
+        DOM.post.innerHTML = `
+            <div style="text-align:center; padding:2rem; opacity:0.4;">
+                <p>✦ no se encontraron resultados para "<strong>${searchTerm}</strong>"</p>
+            </div>
+        `;
+    }
+}
+
+// =============================================
+// 9. MODO LECTURA (MEJORADO)
+// =============================================
+
+function toggleModoLectura() {
+    state.isReadingMode = !state.isReadingMode;
+    document.body.classList.toggle('lectura', state.isReadingMode);
+    
+    if (DOM.modoLecturaBtn) {
+        DOM.modoLecturaBtn.textContent = state.isReadingMode ? '✕ Salir Lectura' : '📖 Modo Lectura';
+    }
+    
+    if (state.isReadingMode && !state.currentPost) {
+        DOM.post.innerHTML = `
+            <div style="text-align:center; padding:2rem; opacity:0.6;">
+                <p>📖 Selecciona un post para leer en modo lectura</p>
+            </div>
+        `;
+    }
 }
 
 // =============================================
@@ -268,34 +343,24 @@ function setActiveFilter(label) {
 
 function clearActiveFilter() {
     setActiveFilter(null);
-    renderList(state.posts);
+    state.filteredPosts = [...state.posts];
+    renderList(state.filteredPosts);
     if (!state.isReadingMode) {
         showWelcome();
     }
 }
 
-function renderList(posts) {
-    if (!DOM.list) return;
-    DOM.list.innerHTML = '';
+function mostrarTodos() {
+    clearActiveFilter();
+    state.currentPost = null;
+    state.filteredPosts = [...state.posts];
+    renderList(state.filteredPosts);
     
-    if (!posts || posts.length === 0) {
-        DOM.list.innerHTML = '<div style="opacity:0.4; text-align:center; padding:1rem;">✦ sin entradas ✦</div>';
-        return;
+    if (state.isReadingMode) {
+        toggleModoLectura();
     }
     
-    posts.forEach(post => {
-        const div = document.createElement('div');
-        const date = formatDate(post.date);
-        div.textContent = `${date} — ${post.title}`;
-        div.dataset.id = post.id;
-        
-        if (state.currentPost && state.currentPost.id === post.id) {
-            div.classList.add('active');
-        }
-        
-        div.addEventListener('click', () => showPost(post));
-        DOM.list.appendChild(div);
-    });
+    showWelcome();
 }
 
 function updatePostCount() {
@@ -305,13 +370,11 @@ function updatePostCount() {
 }
 
 function showWelcome() {
-    if (!state.isReadingMode) {
-        DOM.post.innerHTML = `
-            <div class="welcome-message">
-                <p>✦ selecciona un post para leer ✦</p>
-            </div>
-        `;
-    }
+    DOM.post.innerHTML = `
+        <div class="welcome-message">
+            <p>✦ selecciona un post para leer ✦</p>
+        </div>
+    `;
 }
 
 function formatDate(dateStr) {
@@ -333,16 +396,18 @@ function formatDate(dateStr) {
 // 11. EVENTOS
 // =============================================
 
+// Toggle constelación
 if (DOM.toggleTags) {
     DOM.toggleTags.addEventListener('click', () => {
         if (!DOM.tags) return;
         DOM.tags.classList.toggle('active');
         if (DOM.tags.classList.contains('active')) {
-            setTimeout(renderTags, 150);
+            setTimeout(renderTags, 100);
         }
     });
 }
 
+// Cerrar constelación al hacer clic fuera
 document.addEventListener('click', (e) => {
     if (DOM.tags?.classList.contains('active') &&
         !DOM.tags.contains(e.target) &&
@@ -351,6 +416,7 @@ document.addEventListener('click', (e) => {
     }
 });
 
+// Limpiar filtro
 if (DOM.activeFilter) {
     DOM.activeFilter.addEventListener('click', clearActiveFilter);
 }
@@ -370,3 +436,4 @@ window.toggleModoLectura = toggleModoLectura;
 window.filtrarPorTag = filtrarPorTag;
 window.filtrarPorFecha = filtrarPorFecha;
 window.clearActiveFilter = clearActiveFilter;
+window.buscarPosts = buscarPosts;

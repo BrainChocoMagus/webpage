@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- ===== NAVBAR ===== -->
+    <!-- ===== BARRA DE NAVEGACIÓN ===== -->
     <nav class="navbar">
         <div class="nav-left">
             <a href="../" class="home-link">⌂ Inicio</a>
@@ -16,13 +16,13 @@
         <div class="nav-right">
             <button onclick="mostrarTodos()" class="btn btn-outline">✦ Todos</button>
             <button id="toggleTags" class="btn btn-outline">✦ Constelaciones</button>
-            <!-- El botón de modo lectura ahora tiene un texto más claro -->
             <button onclick="toggleModoLectura()" class="btn btn-outline" id="modoLecturaBtn">📖 Modo Lectura</button>
         </div>
     </nav>
 
-    <!-- ===== CONTENIDO ===== -->
+    <!-- ===== CONTENIDO PRINCIPAL ===== -->
     <div class="main-container">
+        <!-- Panel Izquierdo: Lista de posts -->
         <aside class="sidebar">
             <div class="filter-section">
                 <div id="activeFilter" class="active-filter" style="display:none;"></div>
@@ -31,10 +31,15 @@
                     <button onclick="filtrarPorFecha('2026')" class="btn btn-sm">2026</button>
                     <button onclick="filtrarPorFecha('2027')" class="btn btn-sm">2027</button>
                 </div>
+                <!-- Barra de búsqueda -->
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="🔍 Buscar posts..." oninput="buscarPosts(this.value)">
+                </div>
             </div>
             <div id="list" class="post-list"></div>
         </aside>
 
+        <!-- Panel Derecho: Contenido del post -->
         <main class="content">
             <article id="post" class="post-content">
                 <div class="welcome-message">
@@ -44,7 +49,7 @@
         </main>
     </div>
 
-    <!-- ===== CONSTELACIÓN ===== -->
+    <!-- ===== CONSTELACIÓN DE TAGS ===== -->
     <div id="tags" class="tags-constellation"></div>
 
     <!-- ===== FOOTER ===== -->
