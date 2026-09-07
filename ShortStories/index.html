@@ -4,54 +4,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>✦ Archivo Personal</title>
-    <!-- Enlace al archivo de estilos -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- ============================================= -->
-    <!-- BARRA DE NAVEGACIÓN SUPERIOR                   -->
-    <!-- ============================================= -->
+    <!-- ===== NAVBAR ===== -->
     <nav class="navbar">
         <div class="nav-left">
-            <!-- Enlace a la página principal del sitio -->
             <a href="../" class="home-link">⌂ Inicio</a>
-            <!-- Título del blog -->
             <h1 class="site-title">✦ Archivo</h1>
         </div>
         <div class="nav-right">
-            <!-- Botones de control principales -->
             <button onclick="mostrarTodos()" class="btn btn-outline">✦ Todos</button>
             <button id="toggleTags" class="btn btn-outline">✦ Constelaciones</button>
-            <button onclick="modoLectura()" class="btn btn-icon">🕯️</button>
+            <!-- El botón de modo lectura ahora tiene un texto más claro -->
+            <button onclick="toggleModoLectura()" class="btn btn-outline" id="modoLecturaBtn">📖 Modo Lectura</button>
         </div>
     </nav>
 
-    <!-- ============================================= -->
-    <!-- CONTENIDO PRINCIPAL (Dos columnas)            -->
-    <!-- ============================================= -->
+    <!-- ===== CONTENIDO ===== -->
     <div class="main-container">
-        
-        <!-- Panel Izquierdo: Lista de posts -->
         <aside class="sidebar">
-            <!-- Sección de filtros -->
             <div class="filter-section">
-                <!-- Muestra el filtro activo (si existe) -->
                 <div id="activeFilter" class="active-filter" style="display:none;"></div>
-                <!-- Botones para filtrar por año -->
                 <div class="date-filters">
                     <button onclick="filtrarPorFecha('2025')" class="btn btn-sm">2025</button>
                     <button onclick="filtrarPorFecha('2026')" class="btn btn-sm">2026</button>
                     <button onclick="filtrarPorFecha('2027')" class="btn btn-sm">2027</button>
                 </div>
             </div>
-            <!-- Contenedor donde se renderizará la lista de posts -->
             <div id="list" class="post-list"></div>
         </aside>
 
-        <!-- Panel Derecho: Contenido del post seleccionado -->
         <main class="content">
             <article id="post" class="post-content">
-                <!-- Mensaje de bienvenida (se reemplaza al seleccionar un post) -->
                 <div class="welcome-message">
                     <p>✦ selecciona un post para leer ✦</p>
                 </div>
@@ -59,24 +44,14 @@
         </main>
     </div>
 
-    <!-- ============================================= -->
-    <!-- CONSTELACIÓN DE TAGS (Flotante)              -->
-    <!-- ============================================= -->
-    <!-- Este contenedor aparece como un círculo flotante -->
-    <!-- cuando se hace clic en el botón "Constelaciones" -->
+    <!-- ===== CONSTELACIÓN ===== -->
     <div id="tags" class="tags-constellation"></div>
 
-    <!-- ============================================= -->
-    <!-- FOOTER                                        -->
-    <!-- ============================================= -->
+    <!-- ===== FOOTER ===== -->
     <footer class="footer">
         <p>✦ Archivo personal — <span id="postCount">0</span> entradas</p>
     </footer>
 
-    <!-- ============================================= -->
-    <!-- SCRIPTS                                       -->
-    <!-- ============================================= -->
-    <!-- El archivo JavaScript contiene toda la lógica y los posts -->
     <script src="main.js"></script>
 </body>
 </html>
