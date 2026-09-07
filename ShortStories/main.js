@@ -8,28 +8,35 @@ const POSTS_DATA = [
         date: "2025-12-01",
         tags: ["primero", "inicio"],
         image: null,
-        content: "Este es mi primer post en el archivo personal.\n\nBienvenidos a mi espacio de reflexiones y pensamientos."
+        content: "shadupp this is not my fisrt post ever"
     },
     {
-        title: "Haiku de Invierno",
+        title: "Haiku",
         date: "2025-12-15",
         tags: ["haiku", "poesía", "invierno"],
         image: null,
-        content: "Nieve cayendo,\nsilencio blanco y frío,\npaz en el alma.\n\nEl viento susurra\nentre las ramas desnudas,\nmelodía triste."
+        content: "Mount Fuji snows"
     },
     {
         title: "Small Image",
         date: "2025-12-21",
         tags: ["image", "arte", "dibujo"],
         image: "https://www.newgrounds.com/dump/draw/0aff9772193c4c53a089376b6337238f",
-        content: "My wambo wombo hurts\n\nEste es un dibujo que hice mientras experimentaba con nuevas técnicas.\n\nEl arte es una forma de expresar lo que las palabras no pueden decir."
+        content: "My wambo wombo hurts\n"
     },
     {
-        title: "Haiku de Otoño",
+        title: "Haiku shit",
         date: "2026-09-01",
         tags: ["haiku", "poesía", "otoño"],
         image: null,
-        content: "Hojas que caen,\npintando el suelo de oro,\notoño llega.\n\nEl viento juega\ncon los colores del sol,\nmelancolía."
+        content: "wagamu tuusyututau"
+    }
+    {
+        title: "I have a boyfriend",
+        date: "2026-09-01",
+        tags: ["personal"],
+        image: null,
+        content: "I killed my GF but was she my GF in the first place?"
     }
 ];
 
