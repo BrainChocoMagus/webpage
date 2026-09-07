@@ -122,7 +122,7 @@ function renderList(posts) {
 }
 
 // =============================================
-// 6. MOSTRAR POST
+// 6. MOSTRAR POST (CORREGIDO)
 // =============================================
 
 function showPost(post) {
@@ -140,7 +140,7 @@ function showPost(post) {
     if (post.tags && post.tags.length > 0) {
         html += ` &nbsp;✦ <span class="tags">`;
         html += post.tags.map(tag => 
-            `<span onclick="filtrarPorTag('${tag}')">#${tag}</span>`
+            `<span onclick="filtrarPorTag('${tag}')" style="cursor:pointer;">#${tag}</span>`
         ).join(' ');
         html += `</span>`;
     }
@@ -217,10 +217,9 @@ function renderTags() {
 }
 
 // =============================================
-// 8. FUNCIONES DE FILTRO (CORREGIDAS)
+// 8. FILTRAR POR TAG (CORREGIDO)
 // =============================================
 
-// Filtrar por tag
 function filtrarPorTag(tag) {
     if (!tag) return;
     const cleanTag = tag.trim().toLowerCase();
@@ -239,14 +238,26 @@ function filtrarPorTag(tag) {
     setActiveFilter(`#${cleanTag}`);
     DOM.tags.classList.remove('active'); // Cerrar constelación
     
-    // Mostrar mensaje de filtro
+    // Mostrar mensaje de filtro con los posts encontrados
     if (filtered.length > 0) {
-        DOM.post.innerHTML = `
-            <div style="text-align:center; padding:2rem; opacity:0.6;">
-                <p>✦ posts con <strong style="color:var(--accent);">#${cleanTag}</strong></p>
-                <p style="font-size:0.8rem; margin-top:0.5rem;">${filtered.length} entradas</p>
+        let html = `
+            <div style="text-align:center; padding:1rem 2rem; opacity:0.8;">
+                <p style="font-size:1.1rem;">✦ posts con <strong style="color:var(--accent);">#${cleanTag}</strong></p>
+                <p style="font-size:0.85rem; margin-top:0.3rem; color:var(--text-muted);">${filtered.length} entradas encontradas</p>
             </div>
         `;
+        
+        // Mostrar lista de títulos de los posts filtrados
+        html += `<div style="margin-top:1rem;">`;
+        filtered.forEach(p => {
+            html += `<div style="padding:0.5rem 0; border-bottom:1px solid var(--border-color); cursor:pointer;" onclick="showPostById(${p.id})">`;
+            html += `<span style="color:var(--text-secondary);">${formatDate(p.date)}</span> — `;
+            html += `<span style="color:var(--text-primary);">${p.title}</span>`;
+            html += `</div>`;
+        });
+        html += `</div>`;
+        
+        DOM.post.innerHTML = html;
     } else {
         DOM.post.innerHTML = `
             <div style="text-align:center; padding:2rem; opacity:0.4;">
@@ -256,7 +267,16 @@ function filtrarPorTag(tag) {
     }
 }
 
-// Filtrar por fecha
+// Función auxiliar para mostrar post por ID
+function showPostById(id) {
+    const post = state.posts.find(p => p.id === id);
+    if (post) showPost(post);
+}
+
+// =============================================
+// 9. FILTRAR POR FECHA (CORREGIDO)
+// =============================================
+
 function filtrarPorFecha(yearMonth) {
     if (!yearMonth) return;
     const filtered = state.posts.filter(p => p.date.startsWith(yearMonth));
@@ -267,12 +287,21 @@ function filtrarPorFecha(yearMonth) {
     setActiveFilter(label);
     
     if (filtered.length > 0) {
-        DOM.post.innerHTML = `
-            <div style="text-align:center; padding:2rem; opacity:0.6;">
-                <p>✦ ${label}</p>
-                <p style="font-size:0.8rem; margin-top:0.5rem;">${filtered.length} entradas</p>
+        let html = `
+            <div style="text-align:center; padding:1rem 2rem; opacity:0.8;">
+                <p style="font-size:1.1rem;">✦ ${label}</p>
+                <p style="font-size:0.85rem; margin-top:0.3rem; color:var(--text-muted);">${filtered.length} entradas encontradas</p>
             </div>
         `;
+        
+        filtered.forEach(p => {
+            html += `<div style="padding:0.5rem 0; border-bottom:1px solid var(--border-color); cursor:pointer;" onclick="showPostById(${p.id})">`;
+            html += `<span style="color:var(--text-secondary);">${formatDate(p.date)}</span> — `;
+            html += `<span style="color:var(--text-primary);">${p.title}</span>`;
+            html += `</div>`;
+        });
+        
+        DOM.post.innerHTML = html;
     } else {
         DOM.post.innerHTML = `
             <div style="text-align:center; padding:2rem; opacity:0.4;">
@@ -282,12 +311,19 @@ function filtrarPorFecha(yearMonth) {
     }
 }
 
-// Buscar posts
+// =============================================
+// 10. BÚSQUEDA DE POSTS (CORREGIDO)
+// =============================================
+
 function buscarPosts(query) {
     if (!query || query.trim() === '') {
         state.filteredPosts = [...state.posts];
         renderList(state.filteredPosts);
         if (!state.currentPost) showWelcome();
+        // Restaurar el filtro activo si existe
+        if (state.currentFilter) {
+            setActiveFilter(state.currentFilter);
+        }
         return;
     }
     
@@ -301,7 +337,23 @@ function buscarPosts(query) {
     state.filteredPosts = filtered;
     renderList(filtered);
     
-    if (filtered.length === 0) {
+    if (filtered.length > 0) {
+        let html = `
+            <div style="text-align:center; padding:1rem 2rem; opacity:0.8;">
+                <p style="font-size:1.1rem;">🔍 Resultados para "<strong style="color:var(--accent);">${searchTerm}</strong>"</p>
+                <p style="font-size:0.85rem; margin-top:0.3rem; color:var(--text-muted);">${filtered.length} entradas encontradas</p>
+            </div>
+        `;
+        
+        filtered.forEach(p => {
+            html += `<div style="padding:0.5rem 0; border-bottom:1px solid var(--border-color); cursor:pointer;" onclick="showPostById(${p.id})">`;
+            html += `<span style="color:var(--text-secondary);">${formatDate(p.date)}</span> — `;
+            html += `<span style="color:var(--text-primary);">${p.title}</span>`;
+            html += `</div>`;
+        });
+        
+        DOM.post.innerHTML = html;
+    } else {
         DOM.post.innerHTML = `
             <div style="text-align:center; padding:2rem; opacity:0.4;">
                 <p>✦ no se encontraron resultados para "<strong>${searchTerm}</strong>"</p>
@@ -311,7 +363,7 @@ function buscarPosts(query) {
 }
 
 // =============================================
-// 9. MODO LECTURA (MEJORADO)
+// 11. MODO LECTURA (CORREGIDO)
 // =============================================
 
 function toggleModoLectura() {
@@ -320,8 +372,12 @@ function toggleModoLectura() {
     
     if (DOM.modoLecturaBtn) {
         DOM.modoLecturaBtn.textContent = state.isReadingMode ? '✕ Salir Lectura' : '📖 Modo Lectura';
+        DOM.modoLecturaBtn.style.background = state.isReadingMode ? 'var(--accent)' : 'transparent';
+        DOM.modoLecturaBtn.style.color = state.isReadingMode ? 'var(--bg-primary)' : 'var(--text-secondary)';
+        DOM.modoLecturaBtn.style.borderColor = state.isReadingMode ? 'var(--accent)' : 'var(--border-color)';
     }
     
+    // Si estamos en modo lectura y no hay post seleccionado
     if (state.isReadingMode && !state.currentPost) {
         DOM.post.innerHTML = `
             <div style="text-align:center; padding:2rem; opacity:0.6;">
@@ -332,19 +388,21 @@ function toggleModoLectura() {
 }
 
 // =============================================
-// 10. FUNCIONES DE UTILIDAD
+// 12. FUNCIONES DE UTILIDAD
 // =============================================
 
 function setActiveFilter(label) {
     if (!DOM.activeFilter) return;
     DOM.activeFilter.textContent = label || '';
     DOM.activeFilter.style.display = label ? 'inline-block' : 'none';
+    state.currentFilter = label || null;
 }
 
 function clearActiveFilter() {
     setActiveFilter(null);
     state.filteredPosts = [...state.posts];
     renderList(state.filteredPosts);
+    state.currentFilter = null;
     if (!state.isReadingMode) {
         showWelcome();
     }
@@ -393,7 +451,7 @@ function formatDate(dateStr) {
 }
 
 // =============================================
-// 11. EVENTOS
+// 13. EVENTOS
 // =============================================
 
 // Toggle constelación
@@ -422,13 +480,13 @@ if (DOM.activeFilter) {
 }
 
 // =============================================
-// 12. INICIAR
+// 14. INICIAR
 // =============================================
 
 document.addEventListener('DOMContentLoaded', init);
 
 // =============================================
-// 13. FUNCIONES GLOBALES
+// 15. FUNCIONES GLOBALES
 // =============================================
 
 window.mostrarTodos = mostrarTodos;
@@ -437,3 +495,4 @@ window.filtrarPorTag = filtrarPorTag;
 window.filtrarPorFecha = filtrarPorFecha;
 window.clearActiveFilter = clearActiveFilter;
 window.buscarPosts = buscarPosts;
+window.showPostById = showPostById;
