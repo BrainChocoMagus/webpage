@@ -1,13 +1,39 @@
 // ============================================
-// CONFIGURACIÓN
+// 📚 TUS POSTS (AÑADE AQUÍ TODOS TUS TEXTOS)
 // ============================================
-const CONFIG = {
-    POSTS_FOLDER: 'posts/',
-    POSTS_JSON: 'posts.json'
-};
+const POSTS_DATA = [
+    {
+        title: "First",
+        date: "2025-12-01",
+        tags: ["primero", "inicio"],
+        image: null,
+        content: "Este es mi primer post en el archivo personal.\n\nBienvenidos a mi espacio de reflexiones y pensamientos."
+    },
+    {
+        title: "Haiku de Invierno",
+        date: "2025-12-15",
+        tags: ["haiku", "poesía", "invierno"],
+        image: null,
+        content: "Nieve cayendo,\nsilencio blanco y frío,\npaz en el alma.\n\nEl viento susurra\nentre las ramas desnudas,\nmelodía triste."
+    },
+    {
+        title: "Small Image",
+        date: "2025-12-21",
+        tags: ["image", "arte", "dibujo"],
+        image: "https://www.newgrounds.com/dump/draw/0aff9772193c4c53a089376b6337238f",
+        content: "My wambo wombo hurts\n\nEste es un dibujo que hice mientras experimentaba con nuevas técnicas.\n\nEl arte es una forma de expresar lo que las palabras no pueden decir."
+    },
+    {
+        title: "Haiku de Otoño",
+        date: "2026-09-01",
+        tags: ["haiku", "poesía", "otoño"],
+        image: null,
+        content: "Hojas que caen,\npintando el suelo de oro,\notoño llega.\n\nEl viento juega\ncon los colores del sol,\nmelancolía."
+    }
+];
 
 // ============================================
-// ESTADO DE LA APLICACIÓN
+// ESTADO Y CONFIGURACIÓN
 // ============================================
 const state = {
     posts: [],
@@ -16,9 +42,6 @@ const state = {
     currentPost: null
 };
 
-// ============================================
-// DOM REFERENCIAS
-// ============================================
 const DOM = {
     list: document.getElementById('list'),
     post: document.getElementById('post'),
@@ -29,140 +52,34 @@ const DOM = {
 };
 
 // ============================================
-// FUNCIONES PRINCIPALES
+// INICIALIZACIÓN
 // ============================================
-
-async function init() {
-    try {
-        console.log('📖 Iniciando Archivo Personal...');
-        await loadPosts();
-        console.log(`✅ ${state.posts.length} posts cargados`);
-        console.log('📝 Posts:', state.posts);
-        console.log(`🏷️ Tags encontrados:`, Array.from(state.tags));
-        
-        renderList(state.posts);
-        renderTags();
-        updatePostCount();
-        showWelcome();
-    } catch (error) {
-        console.error('❌ Error al inicializar:', error);
-        showError(error.message);
-    }
-}
-
-async function loadPosts() {
-    // 1. Cargar el archivo JSON
-    const response = await fetch(`${CONFIG.POSTS_FOLDER}${CONFIG.POSTS_JSON}`);
-    if (!response.ok) {
-        throw new Error(`No se pudo cargar ${CONFIG.POSTS_JSON}`);
-    }
+function init() {
+    console.log('📖 Iniciando Archivo Personal...');
     
-    const files = await response.json();
-    console.log(`📋 Archivos encontrados:`, files);
+    // Cargar datos estáticos
+    state.posts = POSTS_DATA.map((p, index) => ({ ...p, id: index }));
+    state.posts.sort((a, b) => new Date(b.date) - new Date(a.date));
     
-    // 2. Cargar todos los archivos de texto
-    const postsData = await Promise.all(
-        files.map(async (filename) => {
-            try {
-                // Limpiar el nombre del archivo
-                let cleanFilename = filename.replace('posts/', '').trim();
-                // Codificar espacios para URL
-                const encodedFilename = encodeURIComponent(cleanFilename);
-                
-                console.log(`📄 Intentando cargar: ${cleanFilename}`);
-                
-                const res = await fetch(`${CONFIG.POSTS_FOLDER}${encodedFilename}`);
-                if (!res.ok) {
-                    console.warn(`⚠️ No se pudo cargar ${cleanFilename} (${res.status})`);
-                    return null;
-                }
-                const text = await res.text();
-                return parsePost(text, cleanFilename);
-            } catch (error) {
-                console.warn(`⚠️ Error cargando ${filename}:`, error);
-                return null;
-            }
-        })
-    );
-    
-    // 3. Filtrar posts válidos
-    state.posts = postsData.filter(p => p !== null);
-    
-    // 4. Ordenar por fecha
-    state.posts.sort((a, b) => {
-        try {
-            return new Date(b.date) - new Date(a.date);
-        } catch (e) {
-            return 0;
-        }
-    });
-    
-    // 5. Recolectar todos los tags
+    // Recolectar tags
     state.posts.forEach(post => {
-        if (post.tags && post.tags.length > 0) {
-            post.tags.forEach(tag => {
-                const cleanTag = tag.trim().toLowerCase();
-                if (cleanTag) state.tags.add(cleanTag);
-            });
-        }
+        post.tags.forEach(tag => state.tags.add(tag.trim().toLowerCase()));
     });
-}
-
-function parsePost(text, filename) {
-    const lines = text.split('\n');
     
-    // Título
-    const titleLine = lines.find(l => l.trim().startsWith('#'));
-    const title = titleLine ? titleLine.replace('#', '').trim() : filename.replace('.txt', '').trim();
+    console.log(`✅ ${state.posts.length} posts cargados`);
+    console.log(`🏷️ ${state.tags.size} tags encontrados:`, Array.from(state.tags));
     
-    // Fecha
-    const dateLine = lines.find(l => l.trim().startsWith('date:'));
-    let date = dateLine ? dateLine.replace('date:', '').trim() : '0000-00-00';
-    
-    // Si la fecha está en formato YYYY-MM, agregar día 01
-    if (date.match(/^\d{4}-\d{2}$/)) {
-        date = `${date}-01`;
-    }
-    
-    // Tags
-    const tagsLine = lines.find(l => l.trim().startsWith('tags:'));
-    let tags = [];
-    if (tagsLine) {
-        tags = tagsLine.replace('tags:', '')
-            .split(',')
-            .map(t => t.trim())
-            .filter(t => t.length > 0);
-    }
-    
-    // Imagen
-    const imageLine = lines.find(l => l.trim().startsWith('image:'));
-    const image = imageLine ? imageLine.replace('image:', '').trim() : null;
-    
-    // Contenido
-    const contentParts = text.split('---');
-    let content = '';
-    if (contentParts.length > 1) {
-        content = contentParts[1].trim();
-    } else {
-        const contentLines = lines.filter(l => 
-            !l.trim().startsWith('#') && 
-            !l.trim().startsWith('date:') && 
-            !l.trim().startsWith('tags:') && 
-            !l.trim().startsWith('image:')
-        );
-        content = contentLines.join('\n').trim();
-    }
-    
-    return { title, date, tags, image, content, filename };
+    renderList(state.posts);
+    renderTags();
+    updatePostCount();
+    showWelcome();
 }
 
 // ============================================
-// FUNCIONES DE RENDERIZADO
+// RENDERIZADO DE LA LISTA
 // ============================================
-
 function renderList(posts) {
     if (!DOM.list) return;
-    
     DOM.list.innerHTML = '';
     
     if (!posts || posts.length === 0) {
@@ -174,100 +91,71 @@ function renderList(posts) {
         const div = document.createElement('div');
         const date = formatDate(post.date);
         div.textContent = `${date} — ${post.title}`;
-        div.title = post.title;
-        div.dataset.filename = post.filename || '';
+        div.dataset.id = post.id;
         
-        if (state.currentPost && state.currentPost.filename === post.filename) {
+        if (state.currentPost && state.currentPost.id === post.id) {
             div.classList.add('active');
         }
         
-        div.addEventListener('click', () => {
-            if (post && post.title) {
-                showPost(post);
-            } else {
-                console.warn('Post inválido:', post);
-            }
-        });
+        div.addEventListener('click', () => showPost(post));
         DOM.list.appendChild(div);
     });
 }
 
+// ============================================
+// MOSTRAR UN POST
+// ============================================
 function showPost(post) {
-    if (!post || !post.title) {
-        console.error('Post inválido:', post);
-        DOM.post.innerHTML = `
-            <div style="text-align:center; padding:2rem; color: #ff6b6b; opacity:0.8;">
-                <p>⚠️ Error: Este post no se pudo cargar correctamente</p>
-            </div>
-        `;
-        return;
-    }
-    
+    if (!post) return;
     state.currentPost = post;
     
     // Actualizar lista
     document.querySelectorAll('#list div').forEach(el => {
-        el.classList.toggle('active', el.dataset.filename === post.filename);
+        el.classList.toggle('active', parseInt(el.dataset.id) === post.id);
     });
     
     let html = `<h2>${post.title}</h2>`;
-    
-    // Metadatos
-    html += `<div class="meta">`;
-    html += `<span>📅 ${post.date || 'Fecha desconocida'}</span>`;
+    html += `<div class="meta">📅 ${post.date}`;
     if (post.tags && post.tags.length > 0) {
         html += ` &nbsp;✦ <span class="tags">`;
         html += post.tags.map(tag => 
-            `<span onclick="filtrarPorTag('${tag.trim()}')">#${tag.trim()}</span>`
+            `<span onclick="filtrarPorTag('${tag}')">#${tag}</span>`
         ).join(' ');
         html += `</span>`;
     }
     html += `</div>`;
     
-    // Imagen
-    if (post.image && post.image.trim()) {
-        const imageUrl = post.image.trim();
-        // Si es URL externa o ruta local
-        if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-            html += `<img src="${imageUrl}" class="post-image" alt="${post.title}" loading="lazy" onerror="this.style.display='none'">`;
-        } else {
-            html += `<img src="${CONFIG.POSTS_FOLDER}${imageUrl}" class="post-image" alt="${post.title}" loading="lazy" onerror="this.style.display='none'">`;
-        }
+    if (post.image) {
+        html += `<img src="${post.image}" class="post-image" alt="${post.title}" loading="lazy" onerror="this.style.display='none'">`;
     }
     
-    // Contenido
-    if (post.content) {
-        html += `<div class="body">${post.content.replace(/\n/g, '<br>')}</div>`;
-    }
-    
-    // Footer
-    html += `<div style="margin-top:2rem; padding-top:1rem; border-top:1px solid var(--border-color); font-size:0.75rem; opacity:0.4;">`;
-    html += `✦ publicado el ${post.date || 'Fecha desconocida'}`;
-    html += `</div>`;
+    html += `<div class="body">${post.content.replace(/\n/g, '<br>')}</div>`;
+    html += `<div style="margin-top:2rem; padding-top:1rem; border-top:1px solid var(--border-color); font-size:0.75rem; opacity:0.4;">✦ publicado el ${post.date}</div>`;
     
     DOM.post.innerHTML = html;
     document.body.classList.add('lectura');
 }
 
+// ============================================
+// CONSTELACIÓN DE TAGS (MEJORADA)
+// ============================================
 function renderTags() {
     if (!DOM.tags || state.tags.size === 0) {
-        console.warn('No hay tags para renderizar');
         DOM.tags.innerHTML = '<div style="color: var(--text-muted); text-align:center; padding:1rem;">✦ sin tags ✦</div>';
         return;
     }
     
     DOM.tags.innerHTML = '';
     const tags = Array.from(state.tags);
-    console.log('🎨 Renderizando tags:', tags);
     
-    // Obtener dimensiones
+    // Obtener dimensiones del contenedor
     const rect = DOM.tags.getBoundingClientRect();
     const size = Math.min(rect.width || 350, rect.height || 350);
     const centerX = size / 2;
     const centerY = size / 2;
-    const radius = Math.min(size * 0.35, 120);
+    const radius = Math.min(size * 0.38, 130);
     
-    // Distribuir en círculo
+    // Distribuir en círculo con mejor espaciado
     const angleStep = (Math.PI * 2) / tags.length;
     
     tags.forEach((tag, i) => {
@@ -275,16 +163,23 @@ function renderTags() {
         el.className = 'tag';
         el.textContent = `#${tag}`;
         
+        // Posición circular con ligera variación para un aspecto más orgánico
         const angle = angleStep * i - Math.PI / 2;
-        const x = centerX + radius * Math.cos(angle);
-        const y = centerY + radius * Math.sin(angle);
+        const variation = 1 + (Math.random() - 0.5) * 0.15; // Variación del 15%
+        const x = centerX + radius * Math.cos(angle) * variation;
+        const y = centerY + radius * Math.sin(angle) * variation;
         
         el.style.left = `${x}px`;
         el.style.top = `${y}px`;
         el.style.transform = 'translate(-50%, -50%)';
         
-        const sizeFactor = Math.max(0.7, 1 - (tags.length / 50));
-        el.style.fontSize = `${0.7 + sizeFactor * 0.3}rem`;
+        // Tamaño según cantidad de tags (más tags = más pequeños)
+        const baseSize = Math.max(0.7, 1.2 - (tags.length / 30));
+        el.style.fontSize = `${baseSize + 0.1}rem`;
+        
+        // Añadir colores aleatorios sutiles
+        const hue = 260 + (i * 15) % 60; // Variación en tonos púrpura
+        el.style.color = `hsl(${hue}, 70%, 75%)`;
         
         el.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -296,15 +191,13 @@ function renderTags() {
 }
 
 // ============================================
-// FUNCIONES DE FILTRO
+// FILTROS
 // ============================================
-
 function filtrarPorTag(tag) {
     if (!tag) return;
-    
     const cleanTag = tag.trim().toLowerCase();
     const filtered = state.posts.filter(p => 
-        p.tags && p.tags.some(t => t.trim().toLowerCase() === cleanTag)
+        p.tags.some(t => t.trim().toLowerCase() === cleanTag)
     );
     
     renderList(filtered);
@@ -321,13 +214,8 @@ function filtrarPorTag(tag) {
 
 function filtrarPorFecha(yearMonth) {
     if (!yearMonth) return;
-    
-    const filtered = state.posts.filter(p => p.date && p.date.startsWith(yearMonth));
-    
-    let label = yearMonth;
-    if (yearMonth.length === 4) {
-        label = `año ${yearMonth}`;
-    }
+    const filtered = state.posts.filter(p => p.date.startsWith(yearMonth));
+    const label = yearMonth.length === 4 ? `año ${yearMonth}` : yearMonth;
     
     renderList(filtered);
     setActiveFilter(label);
@@ -341,25 +229,23 @@ function filtrarPorFecha(yearMonth) {
 }
 
 // ============================================
-// FUNCIONES DE UTILIDAD
+// UTILIDADES
 // ============================================
-
 function setActiveFilter(label) {
     if (!DOM.activeFilter) return;
     DOM.activeFilter.textContent = label || '';
     DOM.activeFilter.style.display = label ? 'inline-block' : 'none';
-    state.currentFilter = label || null;
 }
 
 function clearActiveFilter() {
     setActiveFilter(null);
     renderList(state.posts);
     showWelcome();
+    document.body.classList.remove('lectura');
 }
 
 function mostrarTodos() {
     clearActiveFilter();
-    document.body.classList.remove('lectura');
     state.currentPost = null;
 }
 
@@ -368,66 +254,39 @@ function modoLectura() {
 }
 
 function updatePostCount() {
-    if (DOM.postCount) {
-        DOM.postCount.textContent = state.posts.length || 0;
-    }
+    if (DOM.postCount) DOM.postCount.textContent = state.posts.length || 0;
 }
 
 function showWelcome() {
-    DOM.post.innerHTML = `
-        <div class="welcome-message">
-            <p>✦ selecciona un post para leer ✦</p>
-        </div>
-    `;
-}
-
-function showError(message) {
-    DOM.post.innerHTML = `
-        <div style="text-align:center; padding:2rem; color: #ff6b6b; opacity:0.8;">
-            <p>⚠️ Error al cargar los posts</p>
-            <p style="font-size:0.8rem; margin-top:0.5rem; opacity:0.6;">${message || 'Error desconocido'}</p>
-            <p style="font-size:0.7rem; margin-top:1rem; opacity:0.4;">
-                Asegúrate de que la carpeta "${CONFIG.POSTS_FOLDER}" existe<br>
-                y contiene "${CONFIG.POSTS_JSON}" con la lista de archivos
-            </p>
-        </div>
-    `;
+    DOM.post.innerHTML = `<div class="welcome-message"><p>✦ selecciona un post para leer ✦</p></div>`;
 }
 
 function formatDate(dateStr) {
     if (!dateStr) return 'Fecha desconocida';
-    
     try {
         const date = new Date(dateStr);
         if (!isNaN(date)) {
-            return date.toLocaleDateString('es-ES', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
-            });
+            return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' });
         }
-    } catch (e) {
-        console.warn('Error formateando fecha:', dateStr);
-    }
+    } catch (e) {}
     return dateStr;
 }
 
 // ============================================
 // EVENTOS
 // ============================================
-
 if (DOM.toggleTags) {
     DOM.toggleTags.addEventListener('click', () => {
         if (!DOM.tags) return;
         DOM.tags.classList.toggle('active');
         if (DOM.tags.classList.contains('active')) {
-            setTimeout(renderTags, 100);
+            setTimeout(renderTags, 150);
         }
     });
 }
 
 document.addEventListener('click', (e) => {
-    if (DOM.tags && DOM.tags.classList.contains('active') &&
+    if (DOM.tags?.classList.contains('active') &&
         !DOM.tags.contains(e.target) &&
         e.target !== DOM.toggleTags) {
         DOM.tags.classList.remove('active');
@@ -439,13 +298,12 @@ if (DOM.activeFilter) {
 }
 
 // ============================================
-// INICIALIZAR
+// INICIAR
 // ============================================
-
 document.addEventListener('DOMContentLoaded', init);
 
 // ============================================
-// EXPONER FUNCIONES GLOBALES
+// FUNCIONES GLOBALES PARA EL HTML
 // ============================================
 window.mostrarTodos = mostrarTodos;
 window.modoLectura = modoLectura;
