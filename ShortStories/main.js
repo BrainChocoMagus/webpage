@@ -1,447 +1,400 @@
 // ============================================
-// 1. REFERENCIAS A ELEMENTOS DEL DOM
+// CONFIGURACIÓN - ¡IMPORTANTE PARA PORKBUN!
 // ============================================
-
-const list = document.getElementById("list");           // Lista de posts
-const post = document.getElementById("post");           // Área para mostrar el contenido del post
-const tagsDiv = document.getElementById("tags");        // Contenedor de constelación de tags
-const toggleTagsBtn = document.getElementById("toggleTags"); // Botón para mostrar/ocultar constelación
-const activeFilter = document.getElementById("activeFilter"); // Muestra el filtro activo
-const dateMenu = document.getElementById("dateMenu");   // Menú de fechas (aunque no se usa directamente)
+// Usamos rutas relativas que funcionan tanto local como en servidor
+const CONFIG = {
+    POSTS_FOLDER: 'posts/',
+    POSTS_JSON: 'posts.json'
+};
 
 // ============================================
-// 2. VARIABLES GLOBALES
+// ESTADO DE LA APLICACIÓN
 // ============================================
-
-let posts = [];           // Array para almacenar todos los posts
-let tagsSet = new Set();  // Set para almacenar tags únicos
-let currentFilter = null; // Para rastrear el filtro actual
-
-// ============================================
-// 3. CONFIGURACIÓN
-// ============================================
-
-const POSTS_FOLDER = "posts/"; // Carpeta donde están los archivos de posts
+const state = {
+    posts: [],
+    tags: new Set(),
+    currentFilter: null,
+    currentPost: null
+};
 
 // ============================================
-// 4. FUNCIÓN PRINCIPAL: CARGAR POSTS
+// DOM REFERENCIAS
+// ============================================
+const DOM = {
+    list: document.getElementById('list'),
+    post: document.getElementById('post'),
+    tags: document.getElementById('tags'),
+    toggleTags: document.getElementById('toggleTags'),
+    activeFilter: document.getElementById('activeFilter'),
+    postCount: document.getElementById('postCount')
+};
+
+// ============================================
+// FUNCIONES PRINCIPALES
 // ============================================
 
 /**
- * Carga los posts desde la carpeta especificada
- * 1. Lee posts.json que contiene la lista de archivos
- * 2. Carga cada archivo de texto
- * 3. Parsea el contenido
- * 4. Renderiza la lista y los tags
+ * Inicializa la aplicación cargando los posts
  */
-function cargarPosts() {
-    // Paso 1: Cargar el archivo JSON que lista todos los posts
-    fetch(`${POSTS_FOLDER}posts.json`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`No se pudo cargar posts.json: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(files => {
-            console.log(`📋 Cargando ${files.length} posts...`);
-            
-            // Paso 2: Cargar cada archivo de post en paralelo
-            return Promise.all(
-                files.map(fileName => 
-                    fetch(`${POSTS_FOLDER}${fileName}`)
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error(`No se pudo cargar ${fileName}: ${response.status}`);
-                            }
-                            return response.text();
-                        })
-                        .catch(err => {
-                            console.error(`❌ Error cargando ${fileName}:`, err);
-                            return null; // Si falla un archivo, continuamos con los demás
-                        })
-                )
-            );
-        })
-        .then(textos => {
-            // Paso 3: Parsear todos los textos que se cargaron correctamente
-            textos.forEach(text => {
-                if (text) parsePost(text);
-            });
-            
-            // Ordenar posts por fecha (más reciente primero)
-            posts.sort((a, b) => new Date(b.date) - new Date(a.date));
-            
-            console.log(`✅ ${posts.length} posts cargados correctamente`);
-            console.log(`🏷️ ${tagsSet.size} tags encontrados`);
-            
-            // Paso 4: Renderizar todo
-            renderList(posts);
-            renderTags(); // Renderizar tags incluso si está oculto
-            
-            // Mostrar mensaje de bienvenida
-            post.innerHTML = `
-                <p style="opacity:0.6; text-align:center; padding:2rem 0;">
-                    ✦ selecciona un post para leer ✦
-                </p>
-            `;
-        })
-        .catch(err => {
-            // Manejo de errores
-            console.error("❌ ERROR CRÍTICO:", err);
-            post.innerHTML = `
-                <div style="text-align:center; padding:2rem; color:#b89cff; opacity:0.6;">
-                    <p>⚠️ Error al cargar los posts</p>
-                    <p style="font-size:0.8rem; margin-top:1rem;">
-                        Asegúrate de que la carpeta "${POSTS_FOLDER}" existe y contiene:<br>
-                        1. posts.json con la lista de archivos<br>
-                        2. Los archivos .txt de los posts
-                    </p>
-                    <p style="font-size:0.7rem; margin-top:1rem; opacity:0.5;">
-                        ${err.message}
-                    </p>
-                </div>
-            `;
-        });
+async function init() {
+    try {
+        console.log('📖 Iniciando Archivo Personal...');
+        await loadPosts();
+        console.log(`✅ ${state.posts.length} posts cargados`);
+        console.log(`🏷️ ${state.tags.size} tags encontrados`);
+        
+        renderList(state.posts);
+        renderTags();
+        updatePostCount();
+        showWelcome();
+    } catch (error) {
+        console.error('❌ Error al inicializar:', error);
+        showError(error.message);
+    }
 }
 
-// ============================================
-// 5. PARSEAR UN POST
-// ============================================
-
 /**
- * Analiza el texto de un post y extrae sus metadatos
- * Formato esperado:
- *   # Título
- *   date: 2026-01-15
- *   tags: tag1, tag2, tag3
- *   image: imagen.jpg
- *   ---
- *   Contenido del post...
+ * Carga los posts desde el archivo JSON y los archivos .txt
  */
-function parsePost(text) {
-    const lines = text.split("\n");
+async function loadPosts() {
+    // 1. Cargar el archivo JSON
+    const response = await fetch(`${CONFIG.POSTS_FOLDER}${CONFIG.POSTS_JSON}`);
+    if (!response.ok) {
+        throw new Error(`No se pudo cargar ${CONFIG.POSTS_JSON}`);
+    }
     
-    // Extraer título (primera línea que comienza con #)
-    const titleLine = lines.find(l => l.startsWith("#"));
-    const title = titleLine ? titleLine.replace("#", "").trim() : "Sin título";
+    const files = await response.json();
+    console.log(`📋 Encontrados ${files.length} archivos`);
     
-    // Extraer fecha
-    const dateLine = lines.find(l => l.startsWith("date:"));
-    const date = dateLine ? dateLine.replace("date:", "").trim() : new Date().toISOString().split('T')[0];
+    // 2. Cargar todos los archivos de texto
+    const postsData = await Promise.all(
+        files.map(async (filename) => {
+            try {
+                const res = await fetch(`${CONFIG.POSTS_FOLDER}${filename}`);
+                if (!res.ok) throw new Error(`Error cargando ${filename}`);
+                const text = await res.text();
+                return parsePost(text, filename);
+            } catch (error) {
+                console.warn(`⚠️ No se pudo cargar ${filename}:`, error);
+                return null;
+            }
+        })
+    );
     
-    // Extraer tags
-    const tagsLine = lines.find(l => l.startsWith("tags:"));
-    const tags = tagsLine 
-        ? tagsLine.replace("tags:", "").split(",").map(t => t.trim()).filter(t => t)
-        : [];
+    // 3. Filtrar posts válidos y ordenar
+    state.posts = postsData
+        .filter(p => p !== null)
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
     
-    // Agregar tags al Set global (para evitar duplicados)
-    tags.forEach(t => tagsSet.add(t));
-    
-    // Extraer imagen
-    const imageLine = lines.find(l => l.startsWith("image:"));
-    const image = imageLine ? imageLine.replace("image:", "").trim() : null;
-    
-    // Extraer contenido (todo después de ---)
-    const contentParts = text.split("---");
-    const content = contentParts.length > 1 ? contentParts[1].trim() : text;
-    
-    // Guardar el post en el array global
-    posts.push({ 
-        title, 
-        date, 
-        tags, 
-        image, 
-        content
+    // 4. Recolectar todos los tags
+    state.posts.forEach(post => {
+        post.tags.forEach(tag => state.tags.add(tag));
     });
 }
 
+/**
+ * Parsea un archivo de texto a objeto Post
+ */
+function parsePost(text, filename) {
+    const lines = text.split('\n');
+    
+    // Título
+    const titleLine = lines.find(l => l.startsWith('#'));
+    const title = titleLine ? titleLine.replace('#', '').trim() : 'Sin título';
+    
+    // Fecha
+    const dateLine = lines.find(l => l.startsWith('date:'));
+    const date = dateLine ? dateLine.replace('date:', '').trim() : '0000-00-00';
+    
+    // Tags
+    const tagsLine = lines.find(l => l.startsWith('tags:'));
+    const tags = tagsLine 
+        ? tagsLine.replace('tags:', '').split(',').map(t => t.trim()).filter(t => t)
+        : [];
+    
+    // Imagen
+    const imageLine = lines.find(l => l.startsWith('image:'));
+    const image = imageLine ? imageLine.replace('image:', '').trim() : null;
+    
+    // Contenido
+    const contentParts = text.split('---');
+    const content = contentParts.length > 1 
+        ? contentParts[1].trim() 
+        : lines.filter(l => !l.startsWith('#') && !l.startsWith('date:') && !l.startsWith('tags:') && !l.startsWith('image:')).join('\n').trim();
+    
+    return { title, date, tags, image, content, filename };
+}
+
 // ============================================
-// 6. RENDERIZAR LISTA DE POSTS
+// FUNCIONES DE RENDERIZADO
 // ============================================
 
 /**
- * Muestra la lista de posts en el panel izquierdo
- * @param {Array} arr - Array de posts a mostrar
+ * Renderiza la lista de posts
  */
-function renderList(arr) {
-    list.innerHTML = "";
+function renderList(posts) {
+    if (!DOM.list) return;
     
-    if (arr.length === 0) {
-        list.innerHTML = '<div style="opacity:0.4; text-align:center; padding:1rem;">✦ no hay posts ✦</div>';
+    DOM.list.innerHTML = '';
+    
+    if (posts.length === 0) {
+        DOM.list.innerHTML = '<div style="opacity:0.4; text-align:center; padding:1rem;">✦ sin entradas ✦</div>';
         return;
     }
     
-    arr.forEach(p => {
-        const div = document.createElement("div");
+    posts.forEach(post => {
+        const div = document.createElement('div');
+        const date = formatDate(post.date);
+        div.textContent = `${date} — ${post.title}`;
+        div.title = post.title;
+        div.dataset.filename = post.filename;
         
-        // Formatear fecha para mostrar
-        let fechaMostrada = p.date;
-        try {
-            const fecha = new Date(p.date);
-            if (!isNaN(fecha)) {
-                fechaMostrada = fecha.toLocaleDateString('es-ES', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
-                });
-            }
-        } catch(e) {
-            // Si falla, usar la fecha como está
+        if (state.currentPost && state.currentPost.filename === post.filename) {
+            div.classList.add('active');
         }
         
-        // Mostrar título con fecha
-        div.textContent = `${fechaMostrada} — ${p.title}`;
-        
-        // Al hacer clic, mostrar el post completo
-        div.onclick = () => mostrarPost(p);
-        
-        list.appendChild(div);
+        div.addEventListener('click', () => showPost(post));
+        DOM.list.appendChild(div);
     });
 }
 
-// ============================================
-// 7. MOSTRAR UN POST COMPLETO
-// ============================================
-
 /**
- * Muestra el contenido completo de un post en el área principal
- * @param {Object} p - Objeto del post a mostrar
+ * Muestra un post en el área de contenido
  */
-function mostrarPost(p) {
-    // Construir el HTML del post
-    let html = `<h2>${p.title}</h2>`;
+function showPost(post) {
+    state.currentPost = post;
     
-    // Agregar metadatos (fecha y tags)
-    html += `<div style="opacity:0.6; font-size:0.85rem; margin:0.5rem 0 1.5rem 0;">`;
-    html += `📅 ${p.date}`;
-    if (p.tags && p.tags.length > 0) {
-        html += ` &nbsp;✦ ${p.tags.map(t => `#${t}`).join(' ')}`;
+    // Actualizar lista (marcar activo)
+    document.querySelectorAll('#list div').forEach(el => {
+        el.classList.toggle('active', el.dataset.filename === post.filename);
+    });
+    
+    let html = `<h2>${post.title}</h2>`;
+    
+    // Metadatos
+    html += `<div class="meta">`;
+    html += `<span>📅 ${post.date}</span>`;
+    if (post.tags.length > 0) {
+        html += ` &nbsp;✦ <span class="tags">`;
+        html += post.tags.map(tag => 
+            `<span onclick="filtrarPorTag('${tag}')">#${tag}</span>`
+        ).join(' ');
+        html += `</span>`;
     }
     html += `</div>`;
     
-    // Agregar imagen si existe
-    if (p.image) {
-        html += `<img src="${POSTS_FOLDER}${p.image}" class="post-image" alt="${p.title}">`;
+    // Imagen
+    if (post.image) {
+        html += `<img src="${CONFIG.POSTS_FOLDER}${post.image}" class="post-image" alt="${post.title}" loading="lazy">`;
     }
     
-    // Agregar contenido (convertir saltos de línea a <br>)
-    html += `<div style="margin-top:1.5rem;">`;
-    html += p.content.replace(/\n/g, "<br>");
+    // Contenido
+    html += `<div class="body">${post.content.replace(/\n/g, '<br>')}</div>`;
+    
+    // Footer del post
+    html += `<div style="margin-top:2rem; padding-top:1rem; border-top:1px solid var(--border-color); font-size:0.75rem; opacity:0.4;">`;
+    html += `✦ publicado el ${post.date}`;
     html += `</div>`;
     
-    // Agregar pie de página
-    html += `<div style="margin-top:2rem; padding-top:1rem; border-top:1px solid rgba(184,156,255,0.1); font-size:0.7rem; opacity:0.3;">`;
-    html += `✦ publicado el ${p.date}`;
-    html += `</div>`;
+    DOM.post.innerHTML = html;
     
-    post.innerHTML = html;
-    
-    // Activar modo lectura automáticamente
-    document.body.classList.add("lectura");
+    // Activar modo lectura
+    document.body.classList.add('lectura');
 }
 
-// ============================================
-// 8. RENDERIZAR CONSTELACIÓN DE TAGS
-// ============================================
-
 /**
- * Crea una constelación visual de todos los tags
- * Los tags se distribuyen en un círculo dentro del contenedor
+ * Renderiza la constelación de tags
  */
 function renderTags() {
-    if (tagsSet.size === 0) return;
+    if (!DOM.tags || state.tags.size === 0) return;
     
-    tagsDiv.innerHTML = "";
-    const tags = Array.from(tagsSet);
+    DOM.tags.innerHTML = '';
+    const tags = Array.from(state.tags);
     
-    // Obtener dimensiones del contenedor
-    const rect = tagsDiv.getBoundingClientRect();
-    const width = rect.width || tagsDiv.offsetWidth || 700;
-    const height = rect.height || tagsDiv.offsetHeight || 300;
+    // Obtener dimensiones
+    const rect = DOM.tags.getBoundingClientRect();
+    const size = Math.min(rect.width || 350, rect.height || 350);
+    const centerX = size / 2;
+    const centerY = size / 2;
+    const radius = size * 0.35;
     
-    // Calcular centro y radio
-    const centerX = width / 2;
-    const centerY = height / 2;
-    const radius = Math.min(width, height) * 0.35;
-    
-    // Distribuir tags en círculo
+    // Distribuir en círculo
     const angleStep = (Math.PI * 2) / tags.length;
     
     tags.forEach((tag, i) => {
-        const el = document.createElement("div");
-        el.className = "tag";
+        const el = document.createElement('div');
+        el.className = 'tag';
         el.textContent = `#${tag}`;
         
-        // Posición circular
         const angle = angleStep * i - Math.PI / 2;
         const x = centerX + radius * Math.cos(angle);
         const y = centerY + radius * Math.sin(angle);
         
-        // Aplicar posición
         el.style.left = `${x}px`;
         el.style.top = `${y}px`;
-        el.style.transform = "translate(-50%, -50%)";
+        el.style.transform = 'translate(-50%, -50%)';
         
-        // Tamaño variable según cantidad de tags
-        const baseSize = 0.7;
-        const sizeVariation = tags.length < 10 ? 0.3 : 0.1;
-        el.style.fontSize = `${baseSize + sizeVariation}rem`;
+        // Tamaño variable
+        const sizeFactor = Math.max(0.7, 1 - (tags.length / 50));
+        el.style.fontSize = `${0.7 + sizeFactor * 0.3}rem`;
         
-        // Al hacer clic en un tag, filtrar por ese tag
-        el.onclick = (e) => {
+        el.addEventListener('click', (e) => {
             e.stopPropagation();
             filtrarPorTag(tag);
-        };
+        });
         
-        tagsDiv.appendChild(el);
+        DOM.tags.appendChild(el);
     });
 }
 
 // ============================================
-// 9. TOGGLE CONSTELACIÓN DE TAGS
-// ============================================
-
-// Mostrar/ocultar la constelación de tags
-toggleTagsBtn.onclick = () => {
-    tagsDiv.classList.toggle("active");
-    
-    // Si se está mostrando, renderizar tags
-    if (tagsDiv.classList.contains("active")) {
-        // Esperar un poco para que el contenedor tenga dimensiones
-        setTimeout(renderTags, 50);
-    }
-};
-
-// Cerrar constelación al hacer clic fuera
-document.addEventListener('click', (e) => {
-    if (tagsDiv.classList.contains('active') && 
-        !tagsDiv.contains(e.target) && 
-        e.target !== toggleTagsBtn) {
-        tagsDiv.classList.remove('active');
-    }
-});
-
-// ============================================
-// 10. FILTROS
+// FUNCIONES DE FILTRO
 // ============================================
 
 /**
  * Filtra posts por tag
- * @param {string} tag - Tag por el que filtrar
  */
 function filtrarPorTag(tag) {
-    const filtrados = posts.filter(p => p.tags && p.tags.includes(tag));
-    renderList(filtrados);
+    const filtered = state.posts.filter(p => p.tags.includes(tag));
+    renderList(filtered);
     setActiveFilter(`#${tag}`);
-    tagsDiv.classList.remove('active'); // Ocultar constelación
+    DOM.tags.classList.remove('active');
     
-    // Mostrar mensaje de filtro activo
-    post.innerHTML = `
+    // Mostrar contador
+    DOM.post.innerHTML = `
         <div style="text-align:center; padding:2rem; opacity:0.6;">
-            <p>✦ posts con <strong style="color:#b89cff;">#${tag}</strong></p>
-            <p style="font-size:0.8rem; margin-top:0.5rem;">${filtrados.length} entradas encontradas</p>
+            <p>✦ posts con <strong style="color:var(--accent);">#${tag}</strong></p>
+            <p style="font-size:0.8rem; margin-top:0.5rem;">${filtered.length} entradas</p>
         </div>
     `;
 }
 
 /**
- * Filtra posts por año o año-mes
- * @param {string} yearMonth - Año (YYYY) o año-mes (YYYY-MM)
+ * Filtra posts por fecha
  */
 function filtrarPorFecha(yearMonth) {
-    const filtrados = posts.filter(p => 
-        p.date && p.date.startsWith(yearMonth)
-    );
+    const filtered = state.posts.filter(p => p.date.startsWith(yearMonth));
     
-    // Crear etiqueta legible
     let label = yearMonth;
     if (yearMonth.length === 4) {
         label = `año ${yearMonth}`;
-    } else if (yearMonth.length === 7) {
-        const [year, month] = yearMonth.split('-');
-        const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
-                       'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-        label = `${meses[parseInt(month)-1]} ${year}`;
     }
     
-    renderList(filtrados);
+    renderList(filtered);
     setActiveFilter(label);
     
-    // Mostrar mensaje de filtro activo
-    post.innerHTML = `
+    DOM.post.innerHTML = `
         <div style="text-align:center; padding:2rem; opacity:0.6;">
             <p>✦ ${label}</p>
-            <p style="font-size:0.8rem; margin-top:0.5rem;">${filtrados.length} entradas encontradas</p>
+            <p style="font-size:0.8rem; margin-top:0.5rem;">${filtered.length} entradas</p>
         </div>
     `;
 }
 
 // ============================================
-// 11. FUNCIONES DE UTILIDAD
+// FUNCIONES DE UTILIDAD
 // ============================================
 
-/**
- * Establece el filtro activo en la interfaz
- * @param {string} label - Etiqueta del filtro
- */
 function setActiveFilter(label) {
-    activeFilter.textContent = label;
-    activeFilter.style.display = "block";
-    currentFilter = label;
+    DOM.activeFilter.textContent = label;
+    DOM.activeFilter.style.display = 'inline-block';
+    state.currentFilter = label;
 }
 
-/**
- * Limpia el filtro activo y muestra todos los posts
- */
 function clearActiveFilter() {
-    activeFilter.textContent = "";
-    activeFilter.style.display = "none";
-    currentFilter = null;
-    renderList(posts);
-    
-    // Restaurar mensaje de bienvenida
-    if (!post.querySelector('h2')) {
-        post.innerHTML = `
-            <p style="opacity:0.6; text-align:center; padding:2rem 0;">
-                ✦ selecciona un post para leer ✦
-            </p>
-        `;
+    DOM.activeFilter.textContent = '';
+    DOM.activeFilter.style.display = 'none';
+    state.currentFilter = null;
+    renderList(state.posts);
+    showWelcome();
+}
+
+function mostrarTodos() {
+    clearActiveFilter();
+    document.body.classList.remove('lectura');
+    state.currentPost = null;
+}
+
+function modoLectura() {
+    document.body.classList.toggle('lectura');
+}
+
+function updatePostCount() {
+    if (DOM.postCount) {
+        DOM.postCount.textContent = state.posts.length;
     }
 }
 
-// Hacer click en el filtro activo lo limpia
-activeFilter.onclick = clearActiveFilter;
-
-/**
- * Muestra todos los posts (limpia cualquier filtro)
- */
-function mostrarTodos() {
-    clearActiveFilter();
-    document.body.classList.remove("lectura");
+function showWelcome() {
+    DOM.post.innerHTML = `
+        <div class="welcome-message">
+            <p>✦ selecciona un post para leer ✦</p>
+        </div>
+    `;
 }
 
-/**
- * Alterna el modo lectura (oculta lista y tags)
- */
-function modoLectura() {
-    document.body.classList.toggle("lectura");
+function showError(message) {
+    DOM.post.innerHTML = `
+        <div style="text-align:center; padding:2rem; color: #ff6b6b; opacity:0.8;">
+            <p>⚠️ Error al cargar los posts</p>
+            <p style="font-size:0.8rem; margin-top:0.5rem; opacity:0.6;">${message}</p>
+            <p style="font-size:0.7rem; margin-top:1rem; opacity:0.4;">
+                Asegúrate de que la carpeta "${CONFIG.POSTS_FOLDER}" existe<br>
+                y contiene "${CONFIG.POSTS_JSON}" con la lista de archivos
+            </p>
+        </div>
+    `;
+}
+
+function formatDate(dateStr) {
+    try {
+        const date = new Date(dateStr);
+        if (!isNaN(date)) {
+            return date.toLocaleDateString('es-ES', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+    } catch (e) {}
+    return dateStr;
 }
 
 // ============================================
-// 12. INICIALIZAR LA APLICACIÓN
+// EVENTOS
 // ============================================
 
-// Cargar los posts cuando la página esté lista
-cargarPosts();
+// Toggle constelación
+DOM.toggleTags.addEventListener('click', () => {
+    DOM.tags.classList.toggle('active');
+    if (DOM.tags.classList.contains('active')) {
+        setTimeout(renderTags, 100);
+    }
+});
+
+// Cerrar constelación al hacer click fuera
+document.addEventListener('click', (e) => {
+    if (DOM.tags.classList.contains('active') &&
+        !DOM.tags.contains(e.target) &&
+        e.target !== DOM.toggleTags) {
+        DOM.tags.classList.remove('active');
+    }
+});
+
+// Limpiar filtro al hacer click
+DOM.activeFilter.addEventListener('click', clearActiveFilter);
 
 // ============================================
-// 13. MENSAJES DE CONSOLA PARA DEBUG
+// INICIALIZAR
 // ============================================
 
-console.log('📖 Archivo personal cargado');
-console.log('📁 Los posts deben estar en la carpeta "posts/"');
-console.log('📄 El archivo posts.json debe listar los archivos .txt');
-console.log('📝 Ejemplo de posts.json: ["2026-01-15-mi-post.txt", "2026-01-20-otro-post.txt"]');
-console.log('✨ Estilo visual: tema oscuro con acentos morados');
+document.addEventListener('DOMContentLoaded', init);
+
+// ============================================
+// EXPONER FUNCIONES GLOBALES (para HTML)
+// ============================================
+window.mostrarTodos = mostrarTodos;
+window.modoLectura = modoLectura;
+window.filtrarPorTag = filtrarPorTag;
+window.filtrarPorFecha = filtrarPorFecha;
+window.clearActiveFilter = clearActiveFilter;
